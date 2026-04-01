@@ -1,0 +1,4 @@
+rss_feeds:
+  # Example — replace with live feeds in Milestone 2
+  - https://feeds.bbci.co.uk/news/world/africa/rss.xml
+manual_urls: []

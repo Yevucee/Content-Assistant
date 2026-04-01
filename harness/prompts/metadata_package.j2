@@ -1,0 +1,25 @@
+Generate publishing metadata for a blog post.
+
+Brand: {{ brand_name }}
+Default categories from brand: {{ default_categories | join(', ') }}
+
+Article title: {{ article_title }}
+First ~500 chars of article body (plain):
+{{ article_excerpt }}
+
+Return ONLY valid JSON:
+{
+  "slug": "lowercase-hyphenated-max-60-chars",
+  "meta_title": "≤60 chars, include brand only if natural",
+  "meta_description": "≤160 chars, benefit-led",
+  "excerpt": "1–2 sentences for CMS excerpt",
+  "alt_text_suggestion": "accessible hero description",
+  "tags": ["short", "labels"],
+  "categories": ["prefer brand defaults when they fit"]
+}
+
+Rules:
+- slug: ASCII, hyphens, no dates unless essential.
+- meta_description: no quotes stacking; no clickbait.
+- tags: 3–8 items.
+- categories: may reuse default_categories when relevant.

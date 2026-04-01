@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% block content %}
+  {% set st = pkg['selected_topic'] %}
+  <p class="muted"><a href="/review">← Review queue</a></p>
+  <h1>Run <code>{{ run.id }}</code></h1>
+  <p>
+    <strong>Brand:</strong> {{ run.brand_slug }}
+    &nbsp;|&nbsp; <strong>Status:</strong> <span class="badge">{{ run.status }}</span>
+    &nbsp;|&nbsp; <strong>Stage:</strong> <span class="muted">{{ run.stage }}</span>
+  </p>
+  <p class="muted">Created {{ run.created_at.strftime('%Y-%m-%d %H:%M') }} UTC · Updated {{ run.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>
+
+  {% if approval %}
+  <div class="section">
+    <h2>Recorded decision</h2>
+    <p><strong>{{ approval.status.value }}</strong>
+      {% if approval.actor %} — by {{ approval.actor }}{% endif %}
+      · {{ approval.decided_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>
+    {% if approval.note %}<pre>{{ approval.note }}</pre>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if pkg['errors'] and pkg['errors']|length > 0 %}
+  <div class="section">
+    <h2>Pipeline errors</h2>
+    <ul class="compact">{% for e in pkg['errors'] %}<li><code>{{ e }}</code></li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+
+  <div class="section">
+    <h2>Selected topic</h2>
+    {% if st %}
+      <p><strong>Title:</strong> {{ st.get('working_title', '—') }}</p>
+      <p><strong>Angle:</strong> {{ st.get('angle', '—') }}</p>
+      <p><strong>Why for brand:</strong> {{ st.get('why_for_brand', '—') }}</p>
+      <p><strong>Score / confidence:</strong> {{ st.get('score', '—') }} / {{ st.get('confidence', '—') }}</p>
+      <p class="muted">{{ pkg.get('topic_candidates')|default([], true)|length }} candidate(s) in this run.</p>
+    {% else %}
+      <p class="muted">No selected topic in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Supporting sources (topic)</h2>
+    {% set sup = st.get('supporting_sources')|default([], true) if st else [] %}
+    {% if sup and sup|length > 0 %}
+    <ul class="compact">
+      {% for s in sup %}
+      <li>
+        {% if s is string %}
+          <a href="{{ s }}">{{ s }}</a>
+        {% else %}
+          <strong>{{ s.get('title', 'Source') }}</strong>
+          — <a href="{{ s.get('url', '#') }}">{{ s.get('url', '') }}</a>
+          {% if s.get('summary') %}<br><span class="muted">{{ s.get('summary', '')[:300] }}{% if s.get('summary', '')|length > 300 %}…{% endif %}</span>{% endif %}
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">None listed on topic.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>All ingested sources</h2>
+    {% set items = pkg.get('source_items')|default([], true) %}
+    {% if items|length > 0 %}
+    <table>
+      <thead><tr><th>Title</th><th>URL</th><th>Summary excerpt</th></tr></thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td>{{ it.get('title','') }}</td>
+          <td><a href="{{ it.get('url','#') }}">link</a></td>
+          <td class="muted">{{ it.get('summary','')[:160] }}{% if it.get('summary','')|length > 160 %}…{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No source items in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Editorial brief</h2>
+    {% set b = pkg['editorial_brief'] %}
+    {% if b %}
+      <p><strong>Title:</strong> {{ b.get('title','') }}</p>
+      <p><strong>Audience:</strong> {{ b.get('audience','') }}</p>
+      <p><strong>Narrative angle:</strong> {{ b.get('narrative_angle','') }}</p>
+      <p><strong>CTA direction:</strong> {{ b.get('cta_direction','') }}</p>
+      <p><strong>Key claims</strong></p>
+      <ul class="compact">{% for c in b.get('key_claims')|default([], true) %}<li>{{ c }}</li>{% endfor %}</ul>
+      <p><strong>Suggested structure</strong></p>
+      <ul class="compact">{% for x in b.get('suggested_structure')|default([], true) %}<li>{{ x }}</li>{% endfor %}</ul>
+      <p><strong>Risks / weak points</strong></p>
+      <ul class="compact">{% for x in b.get('risks_weak_points')|default([], true) %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% else %}
+    <p class="muted">No brief in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Article draft</h2>
+    {% set a = pkg['article_draft'] %}
+    {% if a %}
+      <p><strong>Title:</strong> {{ a.get('title','') }}
+        {% if a.get('word_count') %}<span class="muted">({{ a.get('word_count') }} words)</span>{% endif %}
+      </p>
+      <pre>{{ a.get('body_md','') }}</pre>
+    {% else %}
+    <p class="muted">No draft in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>LinkedIn</h2>
+    {% set li = pkg['linkedin_post'] %}
+    {% if li %}
+      <pre>{{ li.get('text','') }}</pre>
+      {% if li.get('hashtags') %}
+      <p class="muted">Hashtags: {% for h in li.get('hashtags')|default([], true) %}#{{ h }} {% endfor %}</p>
+      {% endif %}
+    {% else %}
+    <p class="muted">No LinkedIn copy in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Image prompts</h2>
+    {% set im = pkg['image_prompts'] %}
+    {% if im %}
+      <p class="muted">{{ im.get('style_notes','') }}</p>
+      <ol class="compact">
+        {% for p in im.get('prompts')|default([], true) %}
+        <li><pre style="margin:0.25rem 0;background:transparent;padding:0;">{{ p }}</pre></li>
+        {% endfor %}
+      </ol>
+    {% else %}
+    <p class="muted">No image prompts in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Metadata</h2>
+    {% set m = pkg['metadata_package'] %}
+    {% if m %}
+      <table>
+        <tr><th>slug</th><td><code>{{ m.get('slug','') }}</code></td></tr>
+        <tr><th>meta_title</th><td>{{ m.get('meta_title','') }}</td></tr>
+        <tr><th>meta_description</th><td>{{ m.get('meta_description','') }}</td></tr>
+        <tr><th>excerpt</th><td>{{ m.get('excerpt','') }}</td></tr>
+        <tr><th>alt_text_suggestion</th><td>{{ m.get('alt_text_suggestion','') }}</td></tr>
+        <tr><th>tags</th><td>{{ m.get('tags')|default([], true)|join(', ') }}</td></tr>
+        <tr><th>categories</th><td>{{ m.get('categories')|default([], true)|join(', ') }}</td></tr>
+      </table>
+    {% else %}
+    <p class="muted">No metadata in state.</p>
+    {% endif %}
+  </div>
+
+  <div class="section">
+    <h2>Review warnings</h2>
+    {% set rwarn = pkg['review_warnings'] %}
+    {% if rwarn %}
+      <p><strong>Unsupported / weak claims</strong></p>
+      <ul class="compact">
+        {% for f in rwarn.get('unsupported_claims')|default([], true) %}
+        <li><code>{{ f.get('code','') }}</code> [{{ f.get('severity','') }}] {{ f.get('message','') }}
+          {% if f.get('claim_or_excerpt') %}<br><span class="muted">{{ f.get('claim_or_excerpt') }}</span>{% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      <p><strong>Tone / brand</strong></p>
+      <ul class="compact">
+        {% for f in rwarn.get('tone_flags')|default([], true) %}
+        <li><code>{{ f.get('code','') }}</code> [{{ f.get('severity','') }}] {{ f.get('message','') }}</li>
+        {% endfor %}
+      </ul>
+      {% if rwarn.get('other_notes') %}
+      <p><strong>Other notes</strong></p>
+      <ul class="compact">{% for n in rwarn.get('other_notes') %}<li>{{ n }}</li>{% endfor %}</ul>
+      {% endif %}
+    {% else %}
+    <p class="muted">No warnings in state.</p>
+    {% endif %}
+  </div>
+
+  {% if run.status == 'approved' %}
+  <div class="section">
+    <h2>WordPress draft export</h2>
+    {% if wp_banner_kind %}
+    <div class="banner {% if wp_banner_kind == 'warn' %}warn{% elif wp_banner_kind == 'ok' %}ok{% else %}err{% endif %}">{{ wp_banner_text }}</div>
+    {% endif %}
+    <p class="muted">
+      Sends title, body, excerpt, and slug to the brand&rsquo;s WordPress site via REST as
+      <strong>status=draft</strong> only. Nothing is published. Requires Application Password credentials in environment variables (see <code>brand.yaml</code>).
+    </p>
+    {% if wp_journal.attempts|length > 0 %}
+    <p><strong>Export history</strong> (oldest first, up to last 8)</p>
+    <table>
+      <thead><tr><th>Time (UTC)</th><th>Status</th><th>Post</th><th>Details</th></tr></thead>
+      <tbody>
+        {% for a in wp_journal.attempts[-8:] %}
+        <tr>
+          <td>{{ a.exported_at.strftime('%Y-%m-%d %H:%M') }}</td>
+          <td><code>{{ a.status.value }}</code></td>
+          <td>
+            {% if a.wordpress_post_url %}
+            <a href="{{ a.wordpress_post_url }}" rel="noopener noreferrer">#{{ a.wordpress_post_id }}</a>
+            {% elif a.wordpress_post_id %}
+            <code>#{{ a.wordpress_post_id }}</code>
+            {% else %}—{% endif %}
+          </td>
+          <td class="muted">{% if a.error_message %}{{ a.error_message }}{% elif a.wordpress_site_base %}site {{ a.wordpress_site_base }}{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="muted">No export attempts yet for this run.</p>
+    {% endif %}
+    <div class="actions" style="margin-top:0.75rem;">
+      {% if wp_can_primary %}
+      <form method="post" action="/review/runs/{{ run.id }}/wordpress-draft" onsubmit="return confirm('Create a draft post in WordPress? Nothing will be published.');">
+        <button type="submit">Send to WordPress draft</button>
+      </form>
+      {% endif %}
+      {% if wp_can_force %}
+      <form method="post" action="/review/runs/{{ run.id }}/wordpress-draft" onsubmit="return confirm('Create another draft in WordPress? The existing draft(s) stay in WordPress.');">
+        <input type="hidden" name="force_new_draft" value="1">
+        <button type="submit">Create another WordPress draft</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if can_decide %}
+  <div class="section">
+    <h2>Decision</h2>
+    <p class="muted">These actions update the run record only. WordPress export is not triggered.</p>
+    <div class="actions">
+      <form method="post" action="/review/runs/{{ run.id }}/approve" onsubmit="return confirm('Approve this run?');">
+        <label>Your name (optional) <input type="text" name="actor" autocomplete="name"></label>
+        <label>Note (optional) <textarea name="note" rows="2"></textarea></label>
+        <button type="submit">Approve</button>
+      </form>
+      <form method="post" action="/review/runs/{{ run.id }}/reject" onsubmit="return confirm('Reject this run?');">
+        <label>Your name (optional) <input type="text" name="actor" autocomplete="name"></label>
+        <label>Note (optional) <textarea name="note" rows="2"></textarea></label>
+        <button type="submit" class="danger">Reject</button>
+      </form>
+      <form method="post" action="/review/runs/{{ run.id }}/editing-later">
+        <label>Your name (optional) <input type="text" name="actor" autocomplete="name"></label>
+        <label>Note (optional) <textarea name="note" rows="2"></textarea></label>
+        <button type="submit">Mark editing later</button>
+      </form>
+    </div>
+  </div>
+  {% elif run.status == 'pending_review' %}
+  <p class="muted">Unexpected: run marked pending_review but actions disabled — report as bug.</p>
+  {% else %}
+  <div class="section">
+    <h2>Decision</h2>
+    <p class="muted">No further actions: this run already left the review queue.</p>
+  </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,40 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:///./data/harness.db
+      BRANDS_ROOT: /app/brands
+    volumes:
+      - ./data:/app/data
+      - ./brands:/app/brands
+    command: ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  worker:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite+aiosqlite:///./data/harness.db
+      BRANDS_ROOT: /app/brands
+      DISABLE_SCHEDULER: "1"
+    volumes:
+      - ./data:/app/data
+      - ./brands:/app/brands
+    command: ["python", "-m", "apps.worker.main"]
+
+  # Uncomment for Postgres parity:
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: harness
+  #     POSTGRES_PASSWORD: harness
+  #     POSTGRES_DB: harness
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+# volumes:
+#   pgdata:

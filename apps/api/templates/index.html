@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p class="muted">API JSON: <code>/healthz</code>, <code>/brands</code>, <code>/runs</code>, <code>/docs</code></p>
+  <p><strong><a href="/review">Open review queue</a></strong> for pending editorial runs.</p>
+  {% if app_base_url %}
+  <p class="muted"><code>APP_BASE_URL</code>: {{ app_base_url }}</p>
+  {% endif %}
+{% endblock %}

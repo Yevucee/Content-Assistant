@@ -1,0 +1,30 @@
+slug: inventive-africa
+name: Inventive Africa
+description: Thought leadership for innovation and technology across Africa.
+tone: Confident, analytical, optimistic; avoid hype.
+audience: Founders, investors, and policy leaders focused on African tech and innovation.
+key_themes:
+  - African innovation ecosystems
+  - Investment and scale
+  - Policy and infrastructure
+banned_phrases:
+  - revolutionary
+  - game-changing
+cta_style: Invite readers to learn more or join a conversation — no hard sell.
+linkedin:
+  tone_notes: Short hooks; professional; one clear takeaway.
+  max_chars_hint: 2800
+  hashtag_policy: minimal
+image:
+  style_notes: Contemporary African cities and teams; diverse; avoid stereotypes.
+  aspect_ratio: "16:9"
+  negative_prompts: []
+metadata:
+  title_suffix: null
+  default_categories: []
+wordpress:
+  site_url: https://example.com
+  username_env: WORDPRESS_USERNAME_INVENTIVE_AFRICA
+  application_password_env: WORDPRESS_APP_PASSWORD_INVENTIVE_AFRICA
+approval:
+  require_human_approval: true

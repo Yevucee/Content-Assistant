@@ -1,0 +1,26 @@
+slug: onix
+name: Onix
+description: B2B brand placeholder — replace with real positioning.
+tone: Clear, direct, technical where appropriate.
+audience: Operations and IT leaders at mid-market firms.
+key_themes:
+  - Operational efficiency
+  - Security and reliability
+banned_phrases: []
+cta_style: Book a demo or read related resources — soft CTA.
+linkedin:
+  tone_notes: Problem → insight → link to article.
+  max_chars_hint: 2400
+  hashtag_policy: minimal
+image:
+  style_notes: Clean product and abstract geometric imagery.
+  aspect_ratio: "16:9"
+  negative_prompts: []
+metadata:
+  default_categories: []
+wordpress:
+  site_url: https://example.com
+  username_env: WORDPRESS_USERNAME_ONIX
+  application_password_env: WORDPRESS_APP_PASSWORD_ONIX
+approval:
+  require_human_approval: true

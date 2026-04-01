@@ -1,0 +1,21 @@
+Write a LinkedIn companion post for this brand.
+
+Brand: {{ brand_name }}
+LinkedIn tone notes: {{ linkedin_tone }}
+Hashtag policy: {{ hashtag_policy }}
+Audience: {{ audience }}
+Banned phrases (avoid): {{ banned_phrases | join(', ') }}
+
+Article title: {{ article_title }}
+First ~400 chars of article (for context):
+{{ article_excerpt }}
+
+Return ONLY valid JSON:
+{
+  "text": "Plain text post, no markdown; line breaks ok; 1200–2400 chars ideal unless platform notes say shorter",
+  "hashtags": ["Optional", "MaxThree"]
+}
+
+Rules:
+- Hook in first 1–2 lines; one concrete insight; soft invite to read the article (no clickbait).
+- Match hashtag_policy: "none" -> [], "minimal" -> 0–2, "moderate" -> up to 4.

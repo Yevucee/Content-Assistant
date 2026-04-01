@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <form method="get" action="/review" style="margin-bottom: 1rem;">
+    <label>Brand
+      <select name="brand_slug">
+        <option value="">All brands</option>
+        {% for b in brands %}
+        <option value="{{ b }}" {% if current_brand == b %}selected{% endif %}>{{ b }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Status
+      <select name="status">
+        <option value="pending_review" {% if current_status == 'pending_review' %}selected{% endif %}>Pending review</option>
+        <option value="all" {% if current_status == 'all' %}selected{% endif %}>All statuses</option>
+        <option value="approved" {% if current_status == 'approved' %}selected{% endif %}>Approved</option>
+        <option value="rejected" {% if current_status == 'rejected' %}selected{% endif %}>Rejected</option>
+        <option value="editing_later" {% if current_status == 'editing_later' %}selected{% endif %}>Editing later</option>
+      </select>
+    </label>
+    <button type="submit">Filter</button>
+  </form>
+
+  {% if runs|length == 0 %}
+  <p class="muted">No runs match this filter.</p>
+  {% else %}
+  <table>
+    <thead>
+      <tr>
+        <th>Run ID</th>
+        <th>Brand</th>
+        <th>Status</th>
+        <th>Stage</th>
+        <th>Created (UTC)</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td><code>{{ r.id }}</code></td>
+        <td>{{ r.brand_slug }}</td>
+        <td><span class="badge">{{ r.status }}</span></td>
+        <td class="muted">{{ r.stage }}</td>
+        <td class="muted">{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td><a href="/review/runs/{{ r.id }}">Open</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+{% endblock %}

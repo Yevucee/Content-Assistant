@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title }} — Content Harness</title>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 52rem; margin: 0 auto; padding: 1rem 1.5rem 3rem; line-height: 1.45; }
+      nav { margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #ccc; }
+      nav a { margin-right: 1rem; }
+      code, pre { font-size: 0.9rem; }
+      code { background: #f0f0f0; padding: 0.1em 0.35em; }
+      pre { background: #f8f8f8; padding: 0.75rem; overflow-x: auto; white-space: pre-wrap; word-break: break-word; }
+      table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+      th, td { border: 1px solid #ccc; padding: 0.35rem 0.5rem; text-align: left; vertical-align: top; }
+      th { background: #eee; }
+      .muted { color: #555; font-size: 0.9rem; }
+      .section { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #ddd; }
+      .section h2 { margin-top: 0; font-size: 1.1rem; }
+      .badge { display: inline-block; padding: 0.15em 0.45em; font-size: 0.8rem; background: #eee; border: 1px solid #bbb; }
+      .actions form { display: inline-block; margin-right: 0.75rem; margin-bottom: 0.5rem; }
+      .actions button { padding: 0.35rem 0.65rem; cursor: pointer; }
+      .danger { border-color: #a44; color: #822; }
+      textarea, input[type="text"] { width: 100%; max-width: 36rem; font: inherit; padding: 0.35rem; box-sizing: border-box; }
+      label { display: block; margin-top: 0.35rem; font-size: 0.85rem; }
+      ul.compact li { margin-bottom: 0.35rem; }
+      .banner { padding: 0.65rem 0.85rem; margin: 0.75rem 0; border: 1px solid #999; background: #fafafa; font-size: 0.92rem; }
+      .banner.warn { border-color: #a84; background: #fff8f0; }
+      .banner.ok { border-color: #6a6; background: #f4fff4; }
+      .banner.err { border-color: #a44; background: #fff4f4; }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <a href="/">Home</a>
+      <a href="/review">Review queue</a>
+      <a href="/docs">API docs</a>
+    </nav>
+    {% block content %}{% endblock %}
+  </body>
+</html>

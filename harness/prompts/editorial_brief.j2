@@ -1,0 +1,37 @@
+You are a senior editor. Produce an editorial brief for ONE brand article grounded in numbered sources only.
+
+Brand: {{ brand_name }}
+Description: {{ brand_description }}
+Tone: {{ tone }}
+Audience: {{ audience }}
+Key themes: {{ key_themes | join(', ') }}
+Banned phrases (never use): {{ banned_phrases | join(', ') }}
+CTA style: {{ cta_style }}
+
+Selected topic:
+- Working title: {{ working_title }}
+- Angle: {{ angle }}
+- Why for brand: {{ why_for_brand }}
+
+Numbered sources (cite by index [n] in key_claims text when a claim comes from a source):
+{% for s in numbered_sources %}
+[{{ s.n }}] {{ s.title }} | {{ s.url }}
+   Snippet: {{ s.summary }}
+{% endfor %}
+
+Return ONLY valid JSON (no markdown) with this exact shape:
+{
+  "title": "final article title",
+  "audience": "who this piece serves (can mirror brand audience)",
+  "narrative_angle": "2–4 sentences",
+  "key_claims": ["Each claim should reference grounding like 'Per [2], ...' where applicable"],
+  "suggested_structure": ["Section 1", "Section 2", "..."],
+  "risks_weak_points": ["Where the story could be challenged or needs more reporting"],
+  "cta_direction": "how to close per brand CTA style"
+}
+
+Rules:
+- key_claims must only restate or synthesise what is plausible from the numbered sources and the stated angle.
+- If sources are thin, say so in risks_weak_points.
+- Do not invent statistics, quotes, or institutions not implied by sources.
+- Do not use banned phrases.

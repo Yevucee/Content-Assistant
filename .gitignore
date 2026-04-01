@@ -1,0 +1,53 @@
+# Secrets and local env
+.env
+.env.local
+.env.*.local
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+wheels/
+*.egg
+
+# Tools / tests
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+
+# Local app data (SQLite + WAL/SHM); keep directory with .gitkeep only
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.db-shm
+data/*.sqlite
+data/*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Cursor / local tooling (optional; keep repo machine-agnostic)
+.cursor/

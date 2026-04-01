@@ -1,0 +1,27 @@
+slug: tucker-family-charity
+name: Tucker Family Charity
+description: Community and family-first charitable initiatives.
+tone: Warm, respectful, transparent; donor-trust focused.
+audience: Donors, volunteers, and community partners.
+key_themes:
+  - Local impact stories
+  - Stewardship and transparency
+banned_phrases:
+  - leverage (when used as verb for people)
+cta_style: Invite support or sharing; never guilt-based.
+linkedin:
+  tone_notes: Human stories; thank supporters; link to full story.
+  max_chars_hint: 2600
+  hashtag_policy: minimal
+image:
+  style_notes: Real community imagery; dignified representation.
+  aspect_ratio: "16:9"
+  negative_prompts: []
+metadata:
+  default_categories: []
+wordpress:
+  site_url: https://example.com
+  username_env: WORDPRESS_USERNAME_TUCKER
+  application_password_env: WORDPRESS_APP_PASSWORD_TUCKER
+approval:
+  require_human_approval: true
