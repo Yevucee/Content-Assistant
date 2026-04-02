@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+  <p class="muted"><a href="/review">← Review queue</a></p>
+  <h1>Brand template — {{ slug }}</h1>
+  <p class="muted">
+    Active profile file: <code>brands/{{ slug }}/brand_template.yaml</code>
+    (separate from optional knowledge <code>template.yaml</code> hints).
+  </p>
+  {% if saved %}
+  <div class="banner ok">Saved active template to disk.</div>
+  {% endif %}
+  {% if error %}
+  <div class="banner err">{{ error }}</div>
+  {% endif %}
+  <p><strong>Editor seed:</strong> {{ seed_label }}</p>
+  <p class="muted">Edit JSON below (full <code>BrandTemplateProfile</code>). Saving replaces the file only when you confirm.</p>
+  <form method="post" action="/review/brands/{{ slug }}/brand-template/save">
+    <label>Profile JSON
+      <textarea name="profile_json" rows="28" style="max-width:100%;font-family:monospace;font-size:0.85rem;">{{ profile_json }}</textarea>
+    </label>
+    <label>
+      <input type="checkbox" name="confirm_replace" value="1" required>
+      {% if file_exists %}
+      I confirm replacing the existing <code>brand_template.yaml</code> with the JSON above.
+      {% else %}
+      I confirm creating <code>brand_template.yaml</code> with the JSON above.
+      {% endif %}
+    </label>
+    <div class="actions" style="margin-top:0.75rem;">
+      <button type="submit">Save active template</button>
+    </div>
+  </form>
+  <div class="section">
+    <h2>API</h2>
+    <p class="muted"><code>GET /brands/{{ slug }}/brand-template</code> · <code>PUT /brands/{{ slug }}/brand-template</code> with JSON body.</p>
+  </div>
+{% endblock %}

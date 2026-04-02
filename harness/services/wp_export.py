@@ -17,6 +17,7 @@ from harness.schemas.wordpress_export import (
     WordPressExportJournal,
 )
 from harness.services import brand_loader
+from harness.services.brand_loader import validate_brand_slug
 from harness.services.approval_service import review_package_from_run
 from harness.services.wordpress import (
     WordPressConfigError,
@@ -76,6 +77,11 @@ async def export_approved_run_to_wordpress(
             "not_approved",
             f"Only approved runs can be exported (current status: {run.status}).",
         )
+
+    try:
+        validate_brand_slug(run.brand_slug)
+    except ValueError as e:
+        raise WordPressExportServiceError("invalid_brand", str(e)) from e
 
     journal = load_export_journal(run)
     last_ok = journal.last_succeeded()

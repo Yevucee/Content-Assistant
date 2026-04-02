@@ -7,6 +7,7 @@ import structlog
 from harness.schemas.pipeline import PipelineStage
 from harness.schemas.sources import SourceItem
 from harness.services import topic_generation
+from harness.services.state_helpers import brand_snapshot
 from harness.state.graph_state import GraphState
 
 log = structlog.get_logger(__name__)
@@ -14,7 +15,7 @@ log = structlog.get_logger(__name__)
 
 def score_topics(state: GraphState) -> dict:
     slug = state.get("brand_slug", "")
-    brand = state.get("brand_config_snapshot") or {}
+    brand = brand_snapshot(state)
     raw_items: list = state.get("source_items") or []
     items: list[SourceItem] = []
     for row in raw_items:

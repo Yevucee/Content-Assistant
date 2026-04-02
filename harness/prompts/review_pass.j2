@@ -4,6 +4,8 @@ Brand: {{ brand_name }}
 Tone: {{ tone }}
 Banned phrases: {{ banned_phrases | join(', ') }}
 
+{% include '_brand_knowledge.j2' %}
+
 Article title: {{ article_title }}
 
 Article body (markdown):

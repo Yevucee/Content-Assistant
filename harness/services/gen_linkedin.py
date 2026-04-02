@@ -63,6 +63,7 @@ def generate_linkedin(
         hashtag_policy=str(li.get("hashtag_policy", "minimal")),
         audience=str(brand.get("audience", "")),
         banned_phrases=list(brand.get("banned_phrases") or []),
+        brand_knowledge_context=str(brand.get("brand_knowledge_context", "")),
         article_title=title,
         article_excerpt=excerpt[:1200],
     )

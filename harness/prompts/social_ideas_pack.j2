@@ -1,0 +1,15 @@
+Brand: {{ brand_name }}
+Audience: {{ audience }}
+
+{% include '_brand_knowledge.j2' %}
+
+Core topic: {{ article_title }}
+Angle: {{ narrative_angle|truncate(500) }}
+
+Generate 3-5 distinct social post angles (hooks) that could spin out for LinkedIn, Facebook, or Instagram.
+Return JSON:
+{
+  "angles": [
+    { "title": "short label", "hook": "1-2 sentence hook", "platform_notes": "e.g. better on LinkedIn / visual for IG" }
+  ]
+}

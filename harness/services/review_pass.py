@@ -133,6 +133,7 @@ def run_review(
         brand_name=str(brand.get("name", "Brand")),
         tone=str(brand.get("tone", "")),
         banned_phrases=banned,
+        brand_knowledge_context=str(brand.get("brand_knowledge_context", "")),
         article_title=title,
         article_body=body[:50_000],
         numbered_sources=numbered_sources(all_sources, limit=40),

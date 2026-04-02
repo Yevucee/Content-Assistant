@@ -20,14 +20,23 @@ from harness.utils.url_normalize import normalize_url
 log = structlog.get_logger(__name__)
 
 DEFAULT_USER_AGENT = "ContentHarness/0.2 (+https://example.local; editorial ingestion)"
-MAX_ENTRIES_PER_FEED = int(os.environ.get("SOURCE_RSS_MAX_ENTRIES", "25"))
-MAX_TOTAL_ITEMS = int(os.environ.get("SOURCE_MAX_TOTAL_ITEMS", "80"))
-FETCH_TIMEOUT = float(os.environ.get("SOURCE_FETCH_TIMEOUT", "20"))
+
+
+def _max_entries_per_feed() -> int:
+    return int(os.environ.get("SOURCE_RSS_MAX_ENTRIES", "25"))
+
+
+def _max_total_items() -> int:
+    return int(os.environ.get("SOURCE_MAX_TOTAL_ITEMS", "80"))
+
+
+def _fetch_timeout() -> float:
+    return float(os.environ.get("SOURCE_FETCH_TIMEOUT", "20"))
 
 
 def _http_client() -> httpx.Client:
     return httpx.Client(
-        timeout=FETCH_TIMEOUT,
+        timeout=_fetch_timeout(),
         headers={"User-Agent": os.environ.get("SOURCE_USER_AGENT", DEFAULT_USER_AGENT)},
         follow_redirects=True,
     )
@@ -125,7 +134,8 @@ def fetch_rss_feed(feed_url: str, client: httpx.Client) -> list[SourceItem]:
     feed_title = (parsed.feed.get("title") or "").strip() or urlparse(feed_url).netloc
     base_link = parsed.feed.get("link") or feed_url
 
-    for i, entry in enumerate(parsed.entries[:MAX_ENTRIES_PER_FEED]):
+    cap = _max_entries_per_feed()
+    for i, entry in enumerate(parsed.entries[:cap]):
         link = (entry.get("link") or "").strip()
         if not link:
             link = entry.get("id") or ""
@@ -196,7 +206,8 @@ def ingest_sources(config: SourceListConfig) -> list[SourceItem]:
                 log.info("source.manual.skipped", url=u)
 
     merged = dedupe_items(collected)
-    if len(merged) > MAX_TOTAL_ITEMS:
-        merged = merged[:MAX_TOTAL_ITEMS]
+    max_total = _max_total_items()
+    if len(merged) > max_total:
+        merged = merged[:max_total]
     log.info("source.ingestion.done", total=len(merged))
     return merged

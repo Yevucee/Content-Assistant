@@ -64,6 +64,7 @@ def generate_article(
         audience=str(brand.get("audience", "")),
         banned_phrases=list(brand.get("banned_phrases") or []),
         cta_style=str(brand.get("cta_style", "")),
+        brand_knowledge_context=str(brand.get("brand_knowledge_context", "")),
         brief_title=str(brief.get("title", "Article")),
         brief_audience=str(brief.get("audience", "")),
         brief_angle=str(brief.get("narrative_angle", "")),

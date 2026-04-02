@@ -1,0 +1,16 @@
+Brand: {{ brand_name }}
+Audience: {{ audience }}
+Banned phrases (avoid): {{ banned_phrases|join(', ') }}
+
+{% include '_brand_knowledge.j2' %}
+
+Article title: {{ article_title }}
+Editorial angle: {{ narrative_angle }}
+Key claim (first): {{ first_claim }}
+
+Produce a Facebook post suitable for page or profile: warm, skimmable, optional question or soft CTA.
+Return JSON:
+{
+  "primary": "main post 400-1200 chars",
+  "community": "alternative slightly more conversational / community tone, similar length or shorter"
+}

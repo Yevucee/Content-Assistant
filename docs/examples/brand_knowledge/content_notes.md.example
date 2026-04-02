@@ -1,0 +1,13 @@
+# Content notes
+
+Rename to **content_notes.md** and place under **brands/<slug>/**.
+
+Use this file for anything too long or fluid for `partners.yaml`: positioning, past
+content learnings, meeting notes, stakeholder context.
+
+- You can start with a single section and grow over time.
+- Remove this file entirely if you do not need long-form notes yet.
+
+## Placeholder section
+
+Add subsections as needed.

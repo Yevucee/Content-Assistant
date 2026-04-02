@@ -88,6 +88,7 @@ def generate_editorial_brief(
         key_themes=list(brand.get("key_themes") or []),
         banned_phrases=list(brand.get("banned_phrases") or []),
         cta_style=str(brand.get("cta_style", "")),
+        brand_knowledge_context=str(brand.get("brand_knowledge_context", "")),
         working_title=str(selected_topic.get("working_title", "")),
         angle=str(selected_topic.get("angle", "")),
         why_for_brand=str(selected_topic.get("why_for_brand", "")),

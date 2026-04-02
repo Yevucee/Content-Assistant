@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 import yaml
@@ -39,6 +40,35 @@ def brands_root() -> Path:
     raise FileNotFoundError(msg)
 
 
+_SLUG_PATTERN = re.compile(r"^[a-zA-Z0-9](?:[a-zA-Z0-9_-]{0,62}[a-zA-Z0-9])?$")
+_MAX_SLUG_LEN = 64
+
+
+def validate_brand_slug(slug: str) -> str:
+    """
+    Reject path segments that could escape ``brands_root()`` (.., slashes, etc.).
+
+    Allowed: letters, digits, single-component names with optional internal ``-`` / ``_``.
+    """
+    s = (slug or "").strip()
+    if not s:
+        raise ValueError("brand slug is required")
+    if len(s) > _MAX_SLUG_LEN or not _SLUG_PATTERN.match(s):
+        raise ValueError(
+            "invalid brand slug: use 1–64 chars, letters/digits, hyphens or underscores only "
+            "(single path segment, no dots or slashes)",
+        )
+    root = brands_root().resolve()
+    brand_dir = (root / s).resolve()
+    try:
+        ok = brand_dir.is_relative_to(root)
+    except AttributeError:  # pragma: no cover — Python <3.9
+        ok = str(brand_dir).startswith(str(root) + os.sep) or brand_dir == root
+    if not ok:
+        raise ValueError("invalid brand slug")
+    return s
+
+
 def list_brand_slugs(root: Path | None = None) -> list[str]:
     """Discover brand slugs as immediate subdirectories containing brand.yaml."""
     base = root or brands_root()
@@ -56,6 +86,7 @@ def load_brand_pair(
     root: Path | None = None,
 ) -> tuple[BrandConfig, SourceListConfig]:
     """Load brand.yaml and sources.yaml for slug."""
+    slug = validate_brand_slug(slug)
     base = root or brands_root()
     brand_path = base / slug / "brand.yaml"
     sources_path = base / slug / "sources.yaml"

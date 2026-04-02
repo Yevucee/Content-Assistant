@@ -1,19 +1,10 @@
-# Railway: create two services from the same repo.
+# Railway: two services, same Dockerfile.
 #
-# Service 1 — API
-#   Build: Dockerfile default CMD (uvicorn)
-#   Start: (default)
-#   Variables: DATABASE_URL, OPENAI_*, APP_BASE_URL, etc.
+# 1) API — use image default start (uvicorn, respects $PORT). See docs/railway.md.
+# 2) Worker — in Railway dashboard set start command: python -m apps.worker.main
 #
-# Service 2 — Worker
-#   Build: same image
-#   Start command override: python -m apps.worker.main
-#   Variables: same DATABASE_URL, OPENAI_*, WEEKLY_CRON optional
-#
-# Database: add Railway Postgres plugin; set DATABASE_URL to the plugin reference.
-#
-# Weekly runs: prefer Railway Cron hitting POST /runs/trigger with a secret header,
-# or enable WEEKLY_CRON on the worker in Milestone 5.
+# Both must share the same DATABASE_URL (Railway Postgres). Do not use SQLite for production.
+# Full checklist: docs/railway.md
 
 [build]
 builder = "DOCKERFILE"

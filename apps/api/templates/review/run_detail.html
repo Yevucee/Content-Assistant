@@ -9,6 +9,143 @@
     &nbsp;|&nbsp; <strong>Stage:</strong> <span class="muted">{{ run.stage }}</span>
   </p>
   <p class="muted">Created {{ run.created_at.strftime('%Y-%m-%d %H:%M') }} UTC · Updated {{ run.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>
+  {% if pkg.get('run_mode') %}
+  <p class="muted">Pipeline <strong>mode</strong>: <code>{{ pkg.run_mode }}</code>
+    &nbsp;|&nbsp; <strong>intent</strong>: <code>{{ pkg.run_intent }}</code></p>
+  {% endif %}
+  {% if pkg.get('brand_template_resolution_json') %}
+  <div class="section">
+    <h2>Brand template resolution</h2>
+    <p class="muted">
+      Shows what shaped prompts for this run. Values <code>active_file</code> vs <code>brand_yaml_only</code> refer to
+      <code>brands/{{ run.brand_slug }}/brand_template.yaml</code> (not knowledge <code>template.yaml</code>).
+      A <strong>proposed</strong> template from website analysis stays on the run until you save it as active.
+    </p>
+    <pre style="max-height:12rem;overflow:auto;white-space:pre-wrap;">{{ pkg.brand_template_resolution_json }}</pre>
+    <p class="muted"><a href="/review/brands/{{ run.brand_slug }}/brand-template">Open template editor</a></p>
+  </div>
+  {% endif %}
+  {% set bk = pkg.get('brand_knowledge_snapshot') or {} %}
+  {% if bk.get('loaded_paths') %}
+  <div class="section">
+    <h2>Brand knowledge used</h2>
+    <p class="muted">Loaded from brand folder: {% for p in bk.loaded_paths %}<code>{{ p }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% set cn = bk.get('content_notes_text') or '' %}
+    {% if cn %}
+    <h3>Content notes (excerpt)</h3>
+    <pre style="max-height:10rem;overflow:auto;">{{ cn[:4000] }}{% if cn|length > 4000 %}…{% endif %}</pre>
+    {% endif %}
+    {% set lib = bk.get('library') or [] %}
+    {% if lib %}
+    <h3>Library excerpts</h3>
+    <ul>
+      {% for doc in lib %}
+      <li><code>{{ doc.get('rel_path', '') }}</code> ({{ (doc.get('excerpt') or '')|length }} chars{% if doc.get('truncated') %}, truncated{% endif %})</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% set bk_struct = bk.get('structured') or {} %}
+    {% if bk_struct.get('partners') %}
+    <h3>Partners (summary)</h3>
+    <ul>{% for p in bk_struct.partners %}<li>{{ p.get('name', '') }}{% if p.get('role') %} — {{ p.role }}{% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% set sm = pkg.get('source_material') or {} %}
+  {% if sm.get('kind') or sm.get('label') or sm.get('storage_relpath') or sm.get('original_filename') %}
+  <div class="section">
+    <h2>Source material</h2>
+    <table>
+      {% for k in ['kind', 'label', 'original_filename', 'storage_relpath', 'text_length', 'combined_chars', 'extracted_chars', 'truncated', 'llm_structured'] %}
+        {% if sm.get(k) is not none and sm.get(k) != '' %}
+        <tr><th>{{ k }}</th><td><code>{{ sm.get(k) }}</code></td></tr>
+        {% endif %}
+      {% endfor %}
+    </table>
+    <p class="muted">Uploaded files live under <code>data/uploads/</code> locally (gitignored).</p>
+  </div>
+  {% endif %}
+
+  {% set di = pkg.get('document_input') or {} %}
+  {% if di and (di.get('pasted_text') or di.get('title_hint') or di.get('source_label')) %}
+  <div class="section">
+    <h2>Document input (API)</h2>
+    <p class="muted">Title hint: {{ di.get('title_hint', '—') }} · Label: {{ di.get('source_label', '—') }}</p>
+    {% set dt = di.get('pasted_text', '') %}
+    <pre style="max-height:14rem;overflow:auto;">{{ dt[:6000] }}{% if dt|length > 6000 %}…{% endif %}</pre>
+  </div>
+  {% endif %}
+
+  {% if pkg.get('mixed_input_json') %}
+  <div class="section">
+    <h2>Mixed input bundle</h2>
+    <p class="muted">Structured payload for this run (JSON).</p>
+    <pre style="max-height:16rem;overflow:auto;white-space:pre-wrap;">{{ pkg.mixed_input_json }}</pre>
+  </div>
+  {% endif %}
+  {% if pkg.get('mixed_merge_report_json') %}
+  <div class="section">
+    <h2>Mixed merge report</h2>
+    <p class="muted">Precedence and which lanes contributed.</p>
+    <pre style="max-height:14rem;overflow:auto;white-space:pre-wrap;">{{ pkg.mixed_merge_report_json }}</pre>
+  </div>
+  {% endif %}
+
+  {% if pkg.get('website_discovery_input_json') %}
+  <div class="section">
+    <h2>Website / blog discovery input</h2>
+    <p class="muted">URLs and caps requested for this analysis run (does not change brand YAML on disk).</p>
+    <pre style="max-height:12rem;overflow:auto;white-space:pre-wrap;">{{ pkg.website_discovery_input_json }}</pre>
+  </div>
+  {% endif %}
+  {% if pkg.get('proposed_brand_template_json') %}
+  <div class="section">
+    <h2>Proposed brand template (suggestion)</h2>
+    <p class="muted">Draft <code>BrandTemplateProfile</code> from analysis — not applied to prompts until saved as active.
+      <a href="/review/brands/{{ run.brand_slug }}/brand-template/compare?run_id={{ run.id }}">Compare with saved active</a>
+      · <a href="/review/brands/{{ run.brand_slug }}/brand-template?seed_run_id={{ run.id }}">Seed editor from this run</a>
+    </p>
+    <pre style="max-height:18rem;overflow:auto;white-space:pre-wrap;">{{ pkg.proposed_brand_template_json }}</pre>
+  </div>
+  {% endif %}
+  {% if pkg.get('website_analysis_package_json') %}
+  <div class="section">
+    <h2>Website analysis package</h2>
+    <p class="muted">Fetched page digests, opportunities, and analyst notes.</p>
+    <pre style="max-height:22rem;overflow:auto;white-space:pre-wrap;">{{ pkg.website_analysis_package_json }}</pre>
+  </div>
+  {% endif %}
+
+  {% set ti = pkg.get('transcript_input') or {} %}
+  {% if ti and (ti.get('pasted_text') or ti.get('title_hint') or ti.get('context_notes')) %}
+  <div class="section">
+    <h2>Transcript input (API)</h2>
+    <p class="muted">Title hint: {{ ti.get('title_hint', '—') }} · Context: {{ ti.get('context_notes', '—') }}</p>
+    {% set tt = ti.get('pasted_text', '') %}
+    <pre style="max-height:14rem;overflow:auto;">{{ tt[:6000] }}{% if tt|length > 6000 %}…{% endif %}</pre>
+  </div>
+  {% endif %}
+
+  {% if pkg.get('normalized_input') %}
+  <div class="section">
+    <h2>Normalised input</h2>
+    <dl>
+      {% for k, v in pkg.normalized_input.items() %}
+      <dt><code>{{ k }}</code></dt>
+      <dd style="margin-bottom:0.5rem;">
+        {% if v is string and v|length > 2500 and k == 'summary_for_brief' %}
+        <pre style="margin:0;white-space:pre-wrap;max-height:12rem;overflow:auto;">{{ v[:2500] }}…</pre>
+        <p class="muted">Truncated for display (full text is in pipeline state / DB).</p>
+        {% elif v is string %}
+        <pre style="margin:0;white-space:pre-wrap;">{{ v }}</pre>
+        {% else %}
+        <pre style="margin:0;white-space:pre-wrap;">{{ v }}</pre>
+        {% endif %}
+      </dd>
+      {% endfor %}
+    </dl>
+  </div>
+  {% endif %}
 
   {% if approval %}
   <div class="section">
@@ -127,6 +264,56 @@
     <p class="muted">No LinkedIn copy in state.</p>
     {% endif %}
   </div>
+
+  {% set ch = pkg.get('channel_output_bundle') %}
+  {% if ch %}
+  <div class="section">
+    <h2>Channel pack (Facebook / Instagram / variants)</h2>
+    {% set lich = ch.get('linkedin') %}
+    {% if lich %}
+    <p><strong>LinkedIn punchy</strong></p>
+    <pre>{{ lich.get('punchy','') }}</pre>
+    <p><strong>LinkedIn teaser</strong></p>
+    <pre>{{ lich.get('teaser','') }}</pre>
+    {% endif %}
+    {% set fb = ch.get('facebook') %}
+    {% if fb %}
+    <p><strong>Facebook</strong></p>
+    <pre>{{ fb.get('primary','') }}</pre>
+    {% if fb.get('community') %}<p class="muted"><strong>Community variant</strong></p><pre>{{ fb.get('community','') }}</pre>{% endif %}
+    {% endif %}
+    {% set ig = ch.get('instagram') %}
+    {% if ig %}
+    <p><strong>Instagram caption</strong></p>
+    <pre>{{ ig.get('primary','') }}</pre>
+    {% if ig.get('short') %}<p class="muted"><strong>Short caption</strong></p><pre>{{ ig.get('short','') }}</pre>{% endif %}
+    {% if ig.get('hashtags') %}<p class="muted">Hashtags: {% for h in ig.get('hashtags')|default([], true) %}#{{ h }} {% endfor %}</p>{% endif %}
+    {% endif %}
+    {% set sip = ch.get('social_ideas') %}
+    {% if sip and sip.get('angles') %}
+    <p><strong>Social content angles</strong></p>
+    <ul class="compact">
+      {% for a in sip.get('angles')|default([], true) %}
+      <li><strong>{{ a.get('title','') }}</strong> — {{ a.get('hook','') }}
+        {% if a.get('platform_notes') %}<span class="muted">({{ a.get('platform_notes') }})</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% set icons = ch.get('image_concepts') %}
+    {% if icons %}
+    <p><strong>Image concepts</strong></p>
+    <ul class="compact">
+      {% for ic in icons|default([], true) %}
+      <li><strong>{{ ic.get('concept','') }}</strong> ({{ ic.get('mood','') }} · {{ ic.get('aspect_ratio_hint','') }})
+        <br><span class="muted">Prompt:</span> <pre style="margin:0.25rem 0;">{{ ic.get('prompt_text','') }}</pre>
+        {% if ic.get('signage_notes') %}<span class="muted">Signage: {{ ic.get('signage_notes') }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
 
   <div class="section">
     <h2>Image prompts</h2>

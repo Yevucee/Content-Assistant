@@ -53,7 +53,25 @@ curl -s -X POST http://127.0.0.1:8000/runs/trigger \
   -d '{"brand_slug": "inventive-africa"}'
 ```
 
-Or use **POST /runs/trigger** in `/docs` with body `{"brand_slug": "onix"}` (or another slug from `brands/`).
+**Idea-driven run** (skip RSS/topic discovery; you supply the angle). Optional `run_intent` (default `blog_plus_social`); use `social_only` for a stub article plus full social pack.
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/runs/trigger \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brand_slug": "onix",
+    "run_mode": "idea_driven",
+    "run_intent": "blog_plus_social",
+    "idea": {
+      "working_title": "Why operators still underestimate patch latency",
+      "bullet_points": ["SMB precedent", "Budget trade-offs", "One KPI to watch"],
+      "angle": "Practical, non-alarmist take for IT leaders",
+      "notes": "Link to brand tone: clear, technical"
+    }
+  }'
+```
+
+You can also run **POST /runs/trigger** from `/docs` and edit the JSON there (source-driven or idea-driven).
 
 The run moves through phase 1 until it reaches **`pending_review`** (if your brand requires human approval). **GET /runs/{uuid}** returns JSON including `state` and `status`.
 
@@ -62,7 +80,7 @@ The run moves through phase 1 until it reaches **`pending_review`** (if your bra
 1. Open **http://127.0.0.1:8000/review**
 2. Filter by **brand** and **status** (e.g. pending review vs all)
 3. Open a run → inspect the package → **Approve**, **Reject**, or **Mark editing later**
-4. **Approved** runs only: optional **Send to WordPress draft** if you have configured WordPress env vars and `brand.yaml` (see `docs/implementation_plan.md`)
+4. **Approved** runs only: optional **Send to WordPress draft** in the UI, or **`POST /runs/{run_id}/wordpress/draft`** from the API, if WordPress env vars and `brand.yaml` are set (see `docs/implementation_plan.md`)
 
 ## Local testing (quick checks)
 
@@ -82,10 +100,15 @@ docker compose up --build
 
 API on port **8000**; compose may set `DISABLE_SCHEDULER=1` for the worker — see `docker-compose.yml`.
 
+## Railway (hosted)
+
+First-time production layout: **one API service** + **one worker service**, same Docker image, **shared Postgres** (`DATABASE_URL`). The API listens on **`PORT`** (set by Railway). Step-by-step env vars, database, uploads, and brands-on-disk behavior: **[docs/railway.md](docs/railway.md)**.
+
 ## Brands
 
 Edit **`brands/<slug>/brand.yaml`** and **`sources.yaml`**. Example slugs: `inventive-africa`, `onix`, `tucker-family-charity`.
 
 ## Docs
 
-- [docs/implementation_plan.md](docs/implementation_plan.md) — milestones and future deployment notes
+- [docs/implementation_plan.md](docs/implementation_plan.md) — milestones and architecture notes
+- [docs/railway.md](docs/railway.md) — Railway deployment (API + worker + Postgres)

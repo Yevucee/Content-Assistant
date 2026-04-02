@@ -1,0 +1,52 @@
+You analyse a small, explicit sample of HTML-derived text from ONE organisation's website (and optional blog URLs).
+You do NOT claim unknown facts; infer only style and structure patterns visible in the sample.
+
+Declared brand name (may be empty): {{ brand_name }}
+Analyst notes from user: {{ extra_notes }}
+
+--- Sampled page extracts (may be truncated) ---
+{% for p in pages %}
+### URL: {{ p.url }} | via: {{ p.discovered_via }}
+Title: {{ p.title }}
+Headings: {{ p.heading_outline }}
+Excerpt:
+{{ p.summary_excerpt }}
+{% endfor %}
+
+Return ONLY valid JSON with this shape:
+{
+  "proposed_template": {
+    "tone_summary": "1-3 sentences",
+    "audience": "likely audience from clues in text (hedge if thin)",
+    "preferred_article_length_words": null,
+    "intro_style": "how intros tend to open",
+    "heading_style": "H2/H3 patterns",
+    "narrative_style": "story vs list vs explainer",
+    "evidence_style": "citations, stats, quotes?",
+    "cta_style": "how pieces tend to close",
+    "banned_phrases": [],
+    "preferred_phrases": ["repeated phrases worth echoing"],
+    "image_direction": "",
+    "metadata_tendencies": "title/SEO guesses",
+    "linkedin_tone": "",
+    "facebook_tone": "",
+    "instagram_tone": "",
+    "category_hints": ["theme buckets"],
+    "tag_hints": [],
+    "extra": {}
+  },
+  "content_opportunities": [
+    {
+      "working_title": "string",
+      "angle": "string",
+      "rationale": "what in the sample supports this",
+      "suggested_category": "string or null"
+    }
+  ],
+  "analysis_notes": ["short bullet risks, e.g. thin sample, not enough blog posts"]
+}
+
+Rules:
+- Produce 3–6 content_opportunities grounded in headings/themes seen; fewer if sample is tiny.
+- If sample is too thin, say so in analysis_notes and keep template fields conservative.
+- Never invent product names, dates, or awards not hinted in the excerpts.

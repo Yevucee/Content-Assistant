@@ -7,6 +7,8 @@ Audience: {{ audience }}
 Key themes (prefer these): {{ key_themes | join(', ') }}
 Banned phrases (never use): {{ banned_phrases | join(', ') }}
 
+{% include '_brand_knowledge.j2' %}
+
 Below are recent source headlines/snippets (ground truth — only cite URLs that appear here):
 
 {% for item in source_digest %}

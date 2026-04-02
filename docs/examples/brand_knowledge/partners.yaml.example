@@ -1,0 +1,26 @@
+# Rename to partners.yaml and place under brands/<slug>/
+# Optional: delete keys you do not need, or start from an empty mapping.
+
+partners:
+  - name: "Your partner or organisation name"
+    role: "e.g. delivery partner, funder, media partner"
+    organisation: ""
+    website: "https://example.org"
+    notes: "Coordination rules, quote approval, naming, etc."
+    sensitivity: normal # optional: normal | high
+
+recurring_events:
+  - name: "Your recurring campaign or event"
+    timing: "e.g. annually in Q4"
+    description: "What it is and who it serves."
+    messaging_notes: "Tone, must-mentions, or things to avoid."
+
+approved_language:
+  - phrase: "preferred phrase"
+    context: "when to use it (e.g. hero copy, legal sign-off)"
+
+sensitive_context: |
+  Short internal reminders only (photo consent, naming, timing of announcements).
+
+programme_notes: |
+  One tight paragraph on how programmes are structured or prioritised this year.

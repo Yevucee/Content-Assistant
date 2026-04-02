@@ -3,6 +3,8 @@ Generate publishing metadata for a blog post.
 Brand: {{ brand_name }}
 Default categories from brand: {{ default_categories | join(', ') }}
 
+{% include '_brand_knowledge.j2' %}
+
 Article title: {{ article_title }}
 First ~500 chars of article body (plain):
 {{ article_excerpt }}

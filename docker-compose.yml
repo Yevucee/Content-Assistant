@@ -1,3 +1,6 @@
+# Local dev: SQLite + bind-mounted data/ and brands/.
+# Railway / production: use Postgres and see docs/railway.md (not this file).
+
 services:
   api:
     build: .

@@ -53,6 +53,7 @@ def generate_image_prompts(
         image_style_notes=str(img.get("style_notes", "")),
         aspect_ratio=str(img.get("aspect_ratio", "16:9")),
         negative_prompts=list(img.get("negative_prompts") or []),
+        brand_knowledge_context=str(brand.get("brand_knowledge_context", "")),
         article_title=title,
         brief_angle=angle[:800],
     )

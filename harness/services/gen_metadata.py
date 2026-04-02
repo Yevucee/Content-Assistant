@@ -64,6 +64,7 @@ def generate_metadata(
     user = tmpl.render(
         brand_name=str(brand.get("name", "Brand")),
         default_categories=list(meta.get("default_categories") or []),
+        brand_knowledge_context=str(brand.get("brand_knowledge_context", "")),
         article_title=title,
         article_excerpt=excerpt_in,
     )

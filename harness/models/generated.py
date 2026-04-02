@@ -20,4 +20,5 @@ class RunGeneratedContent(SQLModel, table=True):
     image_prompts_json: str = "{}"
     metadata_json: str = "{}"
     review_warnings_json: str = "{}"
+    channel_outputs_json: str = "{}"
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

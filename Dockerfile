@@ -18,5 +18,6 @@ RUN pip install --no-cache-dir -U pip && pip install --no-cache-dir .
 
 RUN mkdir -p /app/data
 
-# Default command: API (override in Railway for worker)
-CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# API: Railway sets PORT; local / compose default 8000
+# Worker on Railway: override start command to `python -m apps.worker.main`
+CMD ["/bin/sh", "-c", "exec uvicorn apps.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

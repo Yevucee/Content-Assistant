@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+  <p class="muted"><a href="/review/runs/{{ run_id }}">← Run {{ run_id }}</a> · <a href="/review/brands/{{ slug }}/brand-template">Edit template</a></p>
+  <h1>Template compare — {{ slug }}</h1>
+  <p class="muted">
+    <strong>Saved active</strong> = <code>brands/{{ slug }}/brand_template.yaml</code> if present.
+    <strong>Proposed</strong> = snapshot from run <code>{{ run_id }}</code> (not used in prompts until saved).
+  </p>
+  {% if not proposed %}
+  <p class="muted">No proposed template on this run.</p>
+  {% else %}
+  <table>
+    <thead><tr><th>Field</th><th>Saved active</th><th>Proposed (run)</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr {% if not row.same %}style="background:#fffaf0;"{% endif %}>
+        <td><code>{{ row.field }}</code></td>
+        <td><pre style="margin:0;background:transparent;">{{ row.saved_display }}</pre></td>
+        <td><pre style="margin:0;background:transparent;">{{ row.proposed_display }}</pre></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+{% endblock %}

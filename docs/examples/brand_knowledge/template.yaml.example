@@ -1,0 +1,9 @@
+# Rename to template.yaml and place under brands/<slug>/
+# Free-form keys/values; keep values short if possible.
+
+intro_preference: "How you like articles to open (optional)."
+conclusion_preference: "How you like pieces to close (optional)."
+section_patterns:
+  - "Context"
+  - "What happened / what we learned"
+  - "What readers can do next"

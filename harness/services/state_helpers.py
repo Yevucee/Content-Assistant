@@ -5,11 +5,28 @@ from __future__ import annotations
 from typing import Any
 
 from harness.schemas.sources import SourceItem
+from harness.services import brand_knowledge_loader
+from harness.services.brand_template import overlay_brand_dict_with_resolved_template
 from harness.utils.url_normalize import normalize_url
 
 
 def brand_snapshot(state: dict[str, Any]) -> dict[str, Any]:
-    return state.get("brand_config_snapshot") or {}
+    """
+    Brand profile for LLM prompts. Merges optional brand_knowledge_snapshot into
+    a single `brand_knowledge_context` string (not persisted on brand_config_snapshot).
+    Applies ``resolved_brand_template`` when present (active file merged in load_brand_config).
+    """
+    b = dict(state.get("brand_config_snapshot") or {})
+    rt = state.get("resolved_brand_template")
+    if rt:
+        b["resolved_brand_template"] = rt
+        b = overlay_brand_dict_with_resolved_template(b)
+    snap = state.get("brand_knowledge_snapshot")
+    if snap:
+        ctx = brand_knowledge_loader.format_knowledge_for_prompt(snap)
+        if ctx:
+            b["brand_knowledge_context"] = ctx
+    return b
 
 
 def source_items_from_state(state: dict[str, Any]) -> list[SourceItem]:

@@ -37,6 +37,7 @@ data/*.db-wal
 data/*.db-shm
 data/*.sqlite
 data/*.sqlite3
+data/uploads/
 
 # Logs
 *.log

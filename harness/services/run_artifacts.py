@@ -87,6 +87,7 @@ async def persist_run_generated_content(
     image_prompts: dict[str, Any],
     metadata_package: dict[str, Any],
     review_warnings: dict[str, Any],
+    channel_outputs: dict[str, Any] | None = None,
 ) -> None:
     """Store Milestone 3 outputs for inspection and future review UI."""
     res = await session.execute(
@@ -105,5 +106,6 @@ async def persist_run_generated_content(
         image_prompts_json=json.dumps(image_prompts or {}, default=str, ensure_ascii=False),
         metadata_json=json.dumps(metadata_package or {}, default=str, ensure_ascii=False),
         review_warnings_json=json.dumps(review_warnings or {}, default=str, ensure_ascii=False),
+        channel_outputs_json=json.dumps(channel_outputs or {}, default=str, ensure_ascii=False),
     )
     session.add(row)

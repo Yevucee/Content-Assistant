@@ -1,0 +1,18 @@
+Brand: {{ brand_name }}
+Audience: {{ audience }}
+LinkedIn tone notes: {{ linkedin_tone }}
+Hashtag policy: {{ hashtag_policy }}
+
+{% include '_brand_knowledge.j2' %}
+
+Article title: {{ article_title }}
+Draft excerpt: {{ excerpt|truncate(1200) }}
+
+Return JSON for variants of a LinkedIn post:
+{
+  "primary": "full post body, thoughtful, line breaks OK",
+  "punchy": "shorter punchier version same idea",
+  "teaser": "2-3 line teaser that makes people want to click through",
+  "hashtags": ["tag"] 
+}
+Respect hashtag_policy: minimal means 0-2 tags.

@@ -3,27 +3,17 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any
 
 import structlog
-from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from harness.schemas.sources import SourceItem
 from harness.schemas.topics import TopicCandidate
 from harness.services import llm as llm_svc
+from harness.services.prompts_env import get_prompt_env
 from harness.utils.url_normalize import normalize_url
 
 log = structlog.get_logger(__name__)
-
-_PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
-
-
-def _jinja_env() -> Environment:
-    return Environment(
-        loader=FileSystemLoader(str(_PROMPT_DIR)),
-        autoescape=select_autoescape(disabled_extensions=("j2",)),
-    )
 
 
 def _target_candidate_count(num_sources: int) -> int:
@@ -198,7 +188,7 @@ def generate_topic_candidates(
 
     if not skip and items:
         try:
-            env = _jinja_env()
+            env = get_prompt_env()
             tmpl = env.get_template("topic_discovery.j2")
             user_msg = tmpl.render(
                 brand_name=str(brand_snapshot.get("name", "Brand")),
@@ -207,6 +197,7 @@ def generate_topic_candidates(
                 audience=brand_snapshot.get("audience", ""),
                 key_themes=list(brand_snapshot.get("key_themes") or []),
                 banned_phrases=list(brand_snapshot.get("banned_phrases") or []),
+                brand_knowledge_context=str(brand_snapshot.get("brand_knowledge_context", "")),
                 source_digest=_source_digest(items),
                 target_count=target,
             )

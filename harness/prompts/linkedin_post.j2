@@ -6,6 +6,8 @@ Hashtag policy: {{ hashtag_policy }}
 Audience: {{ audience }}
 Banned phrases (avoid): {{ banned_phrases | join(', ') }}
 
+{% include '_brand_knowledge.j2' %}
+
 Article title: {{ article_title }}
 First ~400 chars of article (for context):
 {{ article_excerpt }}

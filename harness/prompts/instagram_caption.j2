@@ -1,0 +1,16 @@
+Brand: {{ brand_name }}
+Audience: {{ audience }}
+Instagram tone hint: {{ instagram_tone }}
+
+{% include '_brand_knowledge.j2' %}
+
+Article title: {{ article_title }}
+Angle: {{ narrative_angle|truncate(400) }}
+
+Create Instagram captions. Return JSON:
+{
+  "primary": "caption with line breaks where natural, under ~2200 chars",
+  "short": "very short version under ~400 chars for reel/story style",
+  "hashtags": ["tag1","tag2"] 
+}
+Use 3-8 hashtags max; no banned topics.

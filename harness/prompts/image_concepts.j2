@@ -1,0 +1,21 @@
+Brand: {{ brand_name }}
+Image style: {{ image_style }}
+Aspect ratio default: {{ aspect_ratio }}
+
+{% include '_brand_knowledge.j2' %}
+
+Article: {{ article_title }}
+Angle: {{ narrative_angle|truncate(600) }}
+
+Return JSON for 3-4 distinct image concepts (manual generation later — strong prompts only):
+{
+  "concepts": [
+    {
+      "concept": "one line human-readable concept",
+      "prompt_text": "detailed image generation prompt, no watermarks",
+      "mood": "e.g. hopeful, analytical, warm",
+      "aspect_ratio_hint": "e.g. 1:1, 16:9, 4:5",
+      "signage_notes": "avoid text in image OR small legible logo only, etc."
+    }
+  ]
+}

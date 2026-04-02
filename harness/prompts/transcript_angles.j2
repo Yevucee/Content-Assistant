@@ -1,0 +1,21 @@
+Brand: {{ brand_name }}
+Audience: {{ audience }}
+{% include '_brand_knowledge.j2' %}
+User title hint: {{ title_hint }}
+Context / meeting type: {{ context_notes }}
+
+Transcript excerpt:
+---
+{{ transcript_excerpt }}
+---
+
+From this transcript, produce JSON:
+{
+  "suggested_title": "concise article-style title",
+  "narrative_angle": "2-4 sentences on the story we should tell and who it serves",
+  "summary_for_brief": "bullet-style paragraph summarizing facts/themes only from the text (max ~1200 chars)",
+  "key_themes": ["theme1", "theme2"],
+  "notable_quotes": ["short exact or near-exact quotes if any, else empty array"],
+  "article_opportunities": ["one-line idea for a follow-on piece, optional"]
+}
+Do not fabricate quotes. If the excerpt is messy, focus on clearest threads.

@@ -6,6 +6,7 @@ import os
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 
 _engine = None
@@ -14,17 +15,38 @@ _session_factory: async_sessionmaker[AsyncSession] | None = None
 
 def get_database_url() -> str:
     """DATABASE_URL from environment with local SQLite default."""
-    return os.environ.get(
-        "DATABASE_URL",
-        "sqlite+aiosqlite:///./data/harness.db",
-    )
+    default = "sqlite+aiosqlite:///./data/harness.db"
+    url = os.environ.get("DATABASE_URL", default)
+    if "+asyncpg" in url or url.startswith("postgresql+asyncpg"):
+        return url
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+asyncpg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return url
 
 
 def get_engine():
     global _engine
     if _engine is None:
         url = get_database_url()
-        _engine = create_async_engine(url, echo=False)
+        # SQLite: default pool (unchanged local dev behaviour).
+        # Postgres on Railway / PaaS: NullPool avoids holding idle connections that the
+        # provider may close; reusing dead sockets from a QueuePool often surfaces as
+        # asyncpg "connection is closed" on checkout or first use.
+        if url.startswith("sqlite"):
+            _engine = create_async_engine(
+                url,
+                echo=False,
+                pool_pre_ping=True,
+            )
+        else:
+            _engine = create_async_engine(
+                url,
+                echo=False,
+                pool_pre_ping=True,
+                poolclass=NullPool,
+            )
     return _engine
 
 
@@ -52,13 +74,6 @@ async def init_db() -> None:
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency: one session per request."""
-    factory = get_session_factory()
-    async with factory() as session:
-        yield session
-
-
-async def session_scope() -> AsyncGenerator[AsyncSession, None]:
-    """Context manager helper for scripts."""
     factory = get_session_factory()
     async with factory() as session:
         yield session
