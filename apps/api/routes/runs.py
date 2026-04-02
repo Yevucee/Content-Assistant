@@ -6,6 +6,7 @@ import json
 import uuid
 from typing import Any
 
+import structlog
 from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +32,32 @@ from harness.services.wp_export import (
 )
 
 router = APIRouter()
+log = structlog.get_logger(__name__)
+
+
+def _pipeline_trigger_http_error(
+    *,
+    endpoint: str,
+    brand_slug: str,
+    run_mode: str,
+) -> HTTPException:
+    """Log full traceback (call only from ``except``); return safe structured JSON (no secrets)."""
+    log.exception(
+        "runs.trigger_failed",
+        endpoint=endpoint,
+        brand_slug=brand_slug,
+        run_mode=run_mode,
+    )
+    return HTTPException(
+        status_code=500,
+        detail={
+            "error": "pipeline_trigger_failed",
+            "message": "Run creation failed; see server logs for the traceback.",
+            "stage": "create_and_run_phase1",
+            "brand_slug": brand_slug,
+            "run_mode": run_mode,
+        },
+    )
 
 
 async def _read_upload_bytes(file: UploadFile) -> tuple[bytes, str]:
@@ -209,6 +236,12 @@ async def trigger_run(
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise _pipeline_trigger_http_error(
+            endpoint="POST /runs/trigger",
+            brand_slug=body.brand_slug,
+            run_mode=body.run_mode.value,
+        ) from e
     return RunSummary.model_validate(run)
 
 
@@ -273,6 +306,12 @@ async def trigger_run_upload(
             raise HTTPException(status_code=404, detail=str(e)) from e
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e)) from e
+        except Exception as e:
+            raise _pipeline_trigger_http_error(
+                endpoint="POST /runs/trigger/upload",
+                brand_slug=brand_slug,
+                run_mode=rm.value,
+            ) from e
         return RunSummary.model_validate(run)
 
     if not raw and not (pasted_text or "").strip():
@@ -308,6 +347,12 @@ async def trigger_run_upload(
         raise HTTPException(status_code=404, detail=str(e)) from e
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        raise _pipeline_trigger_http_error(
+            endpoint="POST /runs/trigger/upload",
+            brand_slug=brand_slug,
+            run_mode=rm.value,
+        ) from e
     return RunSummary.model_validate(run)
 
 
