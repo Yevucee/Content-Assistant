@@ -47,6 +47,7 @@ def _pipeline_trigger_http_error(
         endpoint=endpoint,
         brand_slug=brand_slug,
         run_mode=run_mode,
+        trigger_step=pipeline_runner.get_trigger_trace_step(),
     )
     return HTTPException(
         status_code=500,
@@ -154,6 +155,7 @@ async def trigger_run(
     body: TriggerRunBody,
     session: AsyncSession = Depends(get_db),
 ) -> RunSummary:
+    pipeline_runner.trigger_trace_step("runs.trigger.start")
     if body.run_mode == RunMode.IDEA_DRIVEN and body.idea is None:
         raise HTTPException(
             status_code=400,
@@ -211,6 +213,7 @@ async def trigger_run(
                 detail="existing_blog requires site_url and/or blog_urls",
             )
 
+    pipeline_runner.trigger_trace_step("runs.trigger.validated")
     idea_payload = body.idea.model_dump(mode="json", exclude_none=True) if body.idea else None
     doc_payload = body.document.model_dump(mode="json", exclude_none=True) if body.document else None
     tr_payload = body.transcript.model_dump(mode="json", exclude_none=True) if body.transcript else None
@@ -219,6 +222,7 @@ async def trigger_run(
     existing_blog_payload = (
         body.existing_blog.model_dump(mode="json", exclude_none=True) if body.existing_blog else None
     )
+    pipeline_runner.trigger_trace_step("runs.trigger.before_create_and_run_phase1")
     try:
         run = await pipeline_runner.create_and_run_phase1(
             session,

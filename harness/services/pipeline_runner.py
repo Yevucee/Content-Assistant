@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from contextvars import ContextVar
 from functools import lru_cache
 from typing import Any
 
@@ -38,6 +39,18 @@ from harness.services.upload_storage import save_upload_bytes
 from harness.state.graph_state import initial_graph_state
 
 log = structlog.get_logger(__name__)
+
+_TRIGGER_TRACE_STEP: ContextVar[str] = ContextVar("trigger_trace_step", default="")
+
+
+def trigger_trace_step(step: str) -> None:
+    """Breadcrumb for POST /runs/trigger debugging (request-scoped via context var)."""
+    _TRIGGER_TRACE_STEP.set(step)
+    log.info("trigger.trace", trigger_step=step)
+
+
+def get_trigger_trace_step() -> str:
+    return _TRIGGER_TRACE_STEP.get() or "unset"
 
 
 @lru_cache(maxsize=1)
@@ -112,7 +125,9 @@ async def create_and_run_phase1(
     draft export is triggered separately (`wp_export.export_approved_run_to_wordpress`),
     not from this graph.
     """
+    trigger_trace_step("runs.trigger.pipeline.entry")
     validate_brand_slug(brand_slug)
+    trigger_trace_step("runs.trigger.pipeline.before_pipeline_run_create")
     run = PipelineRun(
         brand_slug=brand_slug,
         status="running",
@@ -120,8 +135,11 @@ async def create_and_run_phase1(
         stage="init",
         state_json="{}",
     )
+    trigger_trace_step("runs.trigger.pipeline.before_session_add")
     session.add(run)
+    trigger_trace_step("runs.trigger.pipeline.before_session_flush")
     await session.flush()
+    trigger_trace_step("runs.trigger.pipeline.after_session_flush")
     canonical_id = str(run.id)
 
     sm: dict[str, Any] = dict(source_material or {})
@@ -242,16 +260,23 @@ async def create_and_run_phase1(
     )
 
     log.info("pipeline.phase1.start", run_id=canonical_id, brand_slug=brand_slug)
+    trigger_trace_step("runs.trigger.pipeline.before_graph_invoke")
     try:
         final = _compiled_phase1_graph().invoke(state)
     except Exception as e:  # noqa: BLE001
-        log.exception("pipeline.phase1.failed", run_id=canonical_id)
+        log.exception(
+            "pipeline.phase1.failed",
+            run_id=canonical_id,
+            trigger_step=get_trigger_trace_step(),
+        )
         final = dict(state)
         err_list = list(final.get("errors") or [])
         err_list.append(str(e))
         final["errors"] = err_list
         final["status"] = RunStatus.FAILED.value
         final["stage"] = PipelineStage.FAILED.value
+
+    trigger_trace_step("runs.trigger.pipeline.after_graph_invoke")
 
     if str(final.get("status")) == RunStatus.PENDING_REVIEW.value:
         await persist_run_sources_and_topics(
@@ -278,7 +303,9 @@ async def create_and_run_phase1(
     run.phase = str(final.get("phase", run.phase))
     run.touch()
     session.add(run)
+    trigger_trace_step("runs.trigger.pipeline.before_commit")
     await session.commit()
+    trigger_trace_step("runs.trigger.pipeline.after_commit")
     await session.refresh(run)
     log.info("pipeline.phase1.done", run_id=canonical_id, status=run.status)
     return run
