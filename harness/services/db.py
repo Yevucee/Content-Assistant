@@ -5,10 +5,13 @@ from __future__ import annotations
 import os
 from collections.abc import AsyncGenerator
 
+import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
+
+log = structlog.get_logger(__name__)
 
 _engine = None
 _session_factory: async_sessionmaker[AsyncSession] | None = None
@@ -62,38 +65,76 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _session_factory
 
 
-async def _repair_pipeline_runs_timestamptz(async_conn) -> None:
+async def _repair_postgres_timestamp_columns(async_conn, *, app_tables: tuple[str, ...]) -> None:
     """
-    Hosted Postgres: older DBs may have TIMESTAMP WITHOUT TIME ZONE on audit columns while
-    the ORM sends timezone-aware datetimes (asyncpg then raises naive/aware errors).
+    Postgres only: legacy DBs may have ``timestamp without time zone`` while the app uses
+    timezone-aware datetimes (asyncpg then raises naive/aware errors).
 
-    If information_schema shows ``timestamp without time zone`` for created_at or updated_at,
-    alter those columns to ``timestamptz``, interpreting existing naive values as UTC.
-    New databases already get TIMESTAMPTZ from metadata.create_all and no-op here.
+    Scope: ``public`` schema, only tables registered on ``SQLModel.metadata`` for this app
+    (passed in as ``app_tables``). For each such column with type
+    ``timestamp without time zone``, run ``ALTER … TYPE timestamptz`` interpreting stored
+    naive instants as UTC.
     """
+    log.info(
+        "db.postgres_ts_repair.inspect_start",
+        schema="public",
+        app_tables=list(app_tables),
+    )
+    if not app_tables:
+        log.warning("db.postgres_ts_repair.no_tables")
+        return
+
+    in_list = ", ".join(f"'{name}'" for name in app_tables)
     r = await async_conn.execute(
         text(
-            """
-            SELECT column_name, data_type
+            f"""
+            SELECT table_name, column_name, data_type
             FROM information_schema.columns
             WHERE table_schema = 'public'
-              AND table_name = 'pipeline_runs'
-              AND column_name IN ('created_at', 'updated_at')
+              AND table_name IN ({in_list})
+              AND data_type IN (
+                'timestamp without time zone',
+                'timestamp with time zone'
+              )
+            ORDER BY table_name, ordinal_position
             """
         )
     )
-    rows = {row[0]: row[1] for row in r.fetchall()}
-    if len(rows) < 2:
-        return
-    for col in ("created_at", "updated_at"):
-        if rows.get(col) != "timestamp without time zone":
+    inspected = [(row[0], row[1], row[2]) for row in r.fetchall()]
+    log.info(
+        "db.postgres_ts_repair.inspect_columns",
+        columns=[{"table": t, "column": c, "data_type": dt} for t, c, dt in inspected],
+    )
+
+    altered: list[dict[str, str]] = []
+    for table_name, column_name, data_type in inspected:
+        if data_type != "timestamp without time zone":
             continue
-        await async_conn.execute(
-            text(
-                f"ALTER TABLE pipeline_runs ALTER COLUMN {col} TYPE timestamptz "
-                f"USING {col} AT TIME ZONE 'UTC'"
-            )
+        stmt = (
+            f'ALTER TABLE "{table_name}" ALTER COLUMN "{column_name}" TYPE timestamptz '
+            f'USING "{column_name}" AT TIME ZONE \'UTC\''
         )
+        try:
+            await async_conn.execute(text(stmt))
+            altered.append({"table": table_name, "column": column_name})
+            log.info(
+                "db.postgres_ts_repair.altered",
+                table=table_name,
+                column=column_name,
+            )
+        except Exception:
+            log.exception(
+                "db.postgres_ts_repair.alter_failed",
+                table=table_name,
+                column=column_name,
+                statement=stmt,
+            )
+            raise
+
+    if not altered:
+        log.info("db.postgres_ts_repair.noop_no_timestamp_without_tz_columns")
+    else:
+        log.info("db.postgres_ts_repair.complete", altered_count=len(altered), altered=altered)
 
 
 async def init_db() -> None:
@@ -108,8 +149,9 @@ async def init_db() -> None:
 
     url = get_database_url()
     if url.startswith("postgresql"):
+        app_tables = tuple(sorted(SQLModel.metadata.tables.keys()))
         async with engine.begin() as conn:
-            await _repair_pipeline_runs_timestamptz(conn)
+            await _repair_postgres_timestamp_columns(conn, app_tables=app_tables)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

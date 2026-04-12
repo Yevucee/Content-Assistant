@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from contextvars import ContextVar
 from functools import lru_cache
@@ -262,7 +263,7 @@ async def create_and_run_phase1(
     log.info("pipeline.phase1.start", run_id=canonical_id, brand_slug=brand_slug)
     trigger_trace_step("runs.trigger.pipeline.before_graph_invoke")
     try:
-        final = _compiled_phase1_graph().invoke(state)
+        final = await asyncio.to_thread(_compiled_phase1_graph().invoke, state)
     except Exception as e:  # noqa: BLE001
         log.exception(
             "pipeline.phase1.failed",
