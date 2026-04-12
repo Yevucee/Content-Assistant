@@ -30,7 +30,9 @@ async def lifespan(app: FastAPI):
         json_logs=log_format == "json",
         log_level=os.environ.get("LOG_LEVEL", "INFO"),
     )
-    await init_db()
+    # Hosted diagnostics: skip DB init when isolating startup (e.g. /ping vs DB connectivity).
+    if os.environ.get("SKIP_INIT_DB_ON_STARTUP") != "1":
+        await init_db()
     yield
 
 
