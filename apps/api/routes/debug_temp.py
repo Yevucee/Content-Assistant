@@ -1,4 +1,4 @@
-# TODO(RAILWAY_DEBUG_REMOVE): Temporary Railway diagnostics — delete this module and router include when done.
+# Mounted only when ENABLE_DEBUG_ROUTES=1 (see apps.api.routes). Default off in production.
 
 """Temporary debug routes that return execution breadcrumbs in JSON (no log tail required)."""
 

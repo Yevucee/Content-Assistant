@@ -21,7 +21,7 @@ from harness.schemas.inputs import (
     WebsiteDiscoveryInput,
 )
 from harness.schemas.run_modes import DEFAULT_RUN_INTENT, DEFAULT_RUN_MODE, RunIntent, RunMode
-from harness.services.brand_loader import validate_brand_slug
+from harness.services import brand_loader
 from harness.services.db import get_db
 from harness.services import pipeline_runner
 from harness.services.state_json import json_blob_to_state
@@ -33,6 +33,16 @@ from harness.services.wp_export import (
 
 router = APIRouter()
 log = structlog.get_logger(__name__)
+
+
+def _ensure_brand_exists(slug: str) -> None:
+    """Fail fast with correct status before creating a run row (missing/invalid brand)."""
+    try:
+        brand_loader.load_brand_pair(slug)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 def _pipeline_trigger_http_error(
@@ -143,7 +153,7 @@ async def list_runs(
 ) -> list[RunSummary]:
     if brand_slug is not None:
         try:
-            validate_brand_slug(brand_slug)
+            brand_loader.validate_brand_slug(brand_slug)
         except ValueError as e:
             raise HTTPException(status_code=400, detail=str(e)) from e
     rows = await pipeline_runner.list_runs(session, brand_slug=brand_slug)
@@ -223,6 +233,7 @@ async def trigger_run(
         body.existing_blog.model_dump(mode="json", exclude_none=True) if body.existing_blog else None
     )
     pipeline_runner.trigger_trace_step("runs.trigger.before_create_and_run_phase1")
+    _ensure_brand_exists(body.brand_slug)
     try:
         run = await pipeline_runner.create_and_run_phase1(
             session,
@@ -296,6 +307,7 @@ async def trigger_run_upload(
         upload_tuple: tuple[bytes, str] | None = None
         if raw is not None and fname:
             upload_tuple = (raw, fname)
+        _ensure_brand_exists(brand_slug)
         try:
             run = await pipeline_runner.create_and_run_phase1(
                 session,
@@ -337,6 +349,7 @@ async def trigger_run_upload(
             "context_notes": context_notes or None,
         }
 
+    _ensure_brand_exists(brand_slug)
     try:
         run = await pipeline_runner.create_and_run_phase1(
             session,

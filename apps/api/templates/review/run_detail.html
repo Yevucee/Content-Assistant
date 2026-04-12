@@ -13,15 +13,23 @@
   <p class="muted">Pipeline <strong>mode</strong>: <code>{{ pkg.run_mode }}</code>
     &nbsp;|&nbsp; <strong>intent</strong>: <code>{{ pkg.run_intent }}</code></p>
   {% endif %}
-  {% if pkg.get('brand_template_resolution_json') %}
+  {% if pkg.get('brand_template_resolution_summary') or pkg.get('brand_template_resolution_json') %}
   <div class="section">
     <h2>Brand template resolution</h2>
     <p class="muted">
-      Shows what shaped prompts for this run. Values <code>active_file</code> vs <code>brand_yaml_only</code> refer to
-      <code>brands/{{ run.brand_slug }}/brand_template.yaml</code> (not knowledge <code>template.yaml</code>).
-      A <strong>proposed</strong> template from website analysis stays on the run until you save it as active.
+      How prompts were shaped for this run. This refers to <code>brands/{{ run.brand_slug }}/brand_template.yaml</code>
+      merged with <code>brand.yaml</code>, not knowledge-folder <code>template.yaml</code>.
+      A <strong>proposed</strong> template from site analysis stays on the run until you save it as active.
     </p>
-    <pre style="max-height:12rem;overflow:auto;white-space:pre-wrap;">{{ pkg.brand_template_resolution_json }}</pre>
+    {% if pkg.get('brand_template_resolution_summary') %}
+    <p>{{ pkg.brand_template_resolution_summary }}</p>
+    {% endif %}
+    {% if pkg.get('brand_template_resolution_json') %}
+    <details>
+      <summary class="muted">Technical details (JSON)</summary>
+      <pre style="max-height:12rem;overflow:auto;white-space:pre-wrap;">{{ pkg.brand_template_resolution_json }}</pre>
+    </details>
+    {% endif %}
     <p class="muted"><a href="/review/brands/{{ run.brand_slug }}/brand-template">Open template editor</a></p>
   </div>
   {% endif %}

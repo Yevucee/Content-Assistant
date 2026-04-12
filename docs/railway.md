@@ -25,6 +25,8 @@ Set the **same** values on API and worker unless noted.
 | `APP_BASE_URL` | Recommended | Public URL of the **API** service (e.g. `https://your-app.up.railway.app`). Used for review UI links and callbacks; set to your primary HTTPS origin. |
 | `LOG_LEVEL` | Optional | Default `INFO`. |
 | `LOG_FORMAT` | Optional | `json` for structured logs. |
+| `ENABLE_DEBUG_ROUTES` | Optional | Set to `1` only for temporary diagnostics — mounts `/debug/*` (default **off**; omit in production). |
+| `SKIP_INIT_DB_ON_STARTUP` | Optional | Set to `1` to skip `init_db()` on boot (rare; for isolating HTTP vs DB). **Unset** for normal operation. |
 
 **WordPress** (if used): same variable **names** as in each brand’s `brand.yaml` (`wordpress.username_env`, `wordpress.application_password_env`). Set the corresponding secrets in Railway for **API** (export runs in the API process).
 
@@ -42,6 +44,7 @@ Set the **same** values on API and worker unless noted.
 - **Local:** SQLite (`sqlite+aiosqlite:///./data/harness.db`) is fine; `data/` is persistent on your machine / bind-mounted in Compose.
 - **Railway (API + worker):** use **Railway Postgres** and attach the plugin so both services receive the **same** `DATABASE_URL`. The async driver is applied in `harness/services/db.py` (`pool_pre_ping` enabled for transient network blips).
 - **Schema:** `init_db()` runs `create_all` on API startup (`apps.api.main` lifespan). First API boot creates tables on the Postgres instance.
+- **`pipeline_runs` timestamps (Postgres only):** After `create_all`, if existing columns are still `timestamp without time zone`, `init_db` runs a one-time `ALTER … TYPE timestamptz` for `created_at` / `updated_at`, interpreting stored naive values as UTC. This fixes asyncpg naive/aware errors on older DBs without Alembic. New databases already use timestamptz from the model and skip the ALTER.
 - **Migrations:** There is no Alembic in-repo yet; schema changes today assume acceptable `create_all` behavior or manual DB handling.
 
 If `sslmode` / SSL errors appear with your Postgres provider, append query args to `DATABASE_URL` as required by that host (e.g. `?sslmode=require`) — Railway’s generated URLs are usually sufficient.
@@ -76,7 +79,8 @@ If `sslmode` / SSL errors appear with your Postgres provider, append query args 
 ## Caveats / warnings
 
 - **SQLite on Railway:** Single-service experiments may “work” with default SQLite, but the DB file is **ephemeral**; redeploys lose data. **Two services without Postgres** = two separate SQLite files ⇒ **broken** shared state.
-- **`PORT`:** The API container must listen on Railway’s `PORT`; the `Dockerfile` `CMD` uses `${PORT:-8000}`.
+- **`PORT`:** The API container must listen on Railway’s `PORT`; the `Dockerfile` `CMD` uses `${PORT:-8000}`. Railway injects `PORT` at runtime — do not hard-code a different listen port in the image.
+- **Health checks:** `railway.toml` may set `healthcheckPath` to `GET /ping` (static JSON, no DB). You can point the service health check at `/ping` or `/healthz` in the dashboard; `/healthz` is also lightweight (no DB). Prefer consistency with the repo config when possible.
 - **Private LLM at `127.0.0.1`:** Not reachable from Railway; point `OPENAI_BASE_URL` at a publicly reachable or VPC-reachable endpoint.
 - **Review UI** is served by the API; protect `/review` in production (network policy or future auth) if the deployment is public.
 

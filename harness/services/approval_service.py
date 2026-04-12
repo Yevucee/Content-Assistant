@@ -124,6 +124,23 @@ def review_package_from_run(run: PipelineRun) -> dict[str, Any]:
     brand_template_resolution_json = (
         json.dumps(btr, indent=2, ensure_ascii=False)[:12_000] if btr else None
     )
+    brand_template_resolution_summary: str | None = None
+    if isinstance(btr, dict):
+        src = str(btr.get("prompt_template_source") or "")
+        rel = btr.get("active_template_relpath")
+        if src == "brand_yaml_only" or not rel:
+            brand_template_resolution_summary = (
+                "Prompts for this run used the baseline from brand.yaml only "
+                "(no active brand_template.yaml merged in)."
+            )
+        elif src == "active_file":
+            brand_template_resolution_summary = (
+                f"Prompts merged brand.yaml with the active template file ({rel})."
+            )
+        else:
+            brand_template_resolution_summary = (
+                "Template resolution is recorded for this run; see technical details below."
+            )
     abt = state.get("active_brand_template")
     active_brand_template_json = (
         json.dumps(abt, indent=2, ensure_ascii=False)[:40_000] if abt else None
@@ -146,6 +163,7 @@ def review_package_from_run(run: PipelineRun) -> dict[str, Any]:
         "proposed_brand_template_json": proposed_brand_template_json,
         "brand_template_resolution": state.get("brand_template_resolution"),
         "brand_template_resolution_json": brand_template_resolution_json,
+        "brand_template_resolution_summary": brand_template_resolution_summary,
         "active_brand_template": state.get("active_brand_template"),
         "active_brand_template_json": active_brand_template_json,
         "normalized_input": state.get("normalized_input"),

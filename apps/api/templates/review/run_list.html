@@ -23,7 +23,13 @@
   </form>
 
   {% if runs|length == 0 %}
-  <p class="muted">No runs match this filter.</p>
+  <div class="section" style="border-top:none;padding-top:0;">
+    <p><strong>No runs match this filter.</strong></p>
+    <p class="muted">
+      If you just deployed, create one with <code>POST /runs/trigger</code> (see <a href="/docs">API docs</a>).
+      Choose <strong>All statuses</strong> above to list every run, including failures and completed reviews.
+    </p>
+  </div>
   {% else %}
   <table>
     <thead>

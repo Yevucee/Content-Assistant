@@ -9,3 +9,9 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
+
+# Railway runs the container with PORT set; the Dockerfile CMD uses ${PORT:-8000} (see Dockerfile).
+# Health check: lightweight JSON route (no DB). Dashboard overrides still apply if set there.
+[deploy]
+healthcheckPath = "/ping"
+healthcheckTimeout = 120

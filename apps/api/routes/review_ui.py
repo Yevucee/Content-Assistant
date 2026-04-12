@@ -62,6 +62,15 @@ def _ctx(request: Request, **kwargs):
     return base
 
 
+def _review_not_found(request: Request, *, title: str, message: str) -> HTMLResponse:
+    return templates.TemplateResponse(
+        request,
+        "review/not_found.html",
+        _ctx(request, title=title, message=message),
+        status_code=404,
+    )
+
+
 def _display_cell(v: Any) -> str:
     if v is None:
         return "—"
@@ -114,12 +123,13 @@ def _wordpress_query_banner(request: Request) -> tuple[str | None, str]:
 @router.get("", response_class=HTMLResponse)
 async def review_run_list(
     request: Request,
-    brand_slug: str | None = None,
-    status: str = "pending_review",
+    brand_slug: str | None = Query(None),
+    status: str = Query("pending_review"),
     session: AsyncSession = Depends(get_db),
 ) -> HTMLResponse:
     """Filterable list of runs (default: awaiting review)."""
-    runs = await list_runs_for_review(session, brand_slug=brand_slug, status=status)
+    bs = (brand_slug or "").strip() or None
+    runs = await list_runs_for_review(session, brand_slug=bs, status=status)
     brands = brand_loader.list_brand_slugs()
     return templates.TemplateResponse(
         request,
@@ -129,7 +139,7 @@ async def review_run_list(
             title="Review queue",
             runs=runs,
             brands=brands,
-            current_brand=brand_slug or "",
+            current_brand=bs or "",
             current_status=status,
         ),
     )
@@ -143,7 +153,11 @@ async def review_run_detail(
 ) -> HTMLResponse:
     run = await get_run(session, run_id)
     if run is None:
-        raise HTTPException(status_code=404, detail="Run not found")
+        return _review_not_found(
+            request,
+            title="Run not found",
+            message='No run exists with this id. Check the link or open the <a href="/review">review queue</a>.',
+        )
     pkg = review_package_from_run(run)
     approval = parse_approval(run)
     can_decide = run.status == RunStatus.PENDING_REVIEW.value
@@ -282,11 +296,19 @@ async def review_brand_template_editor(
     if seed_run_id is not None:
         run = await get_run(session, seed_run_id)
         if run is None or run.brand_slug != slug:
-            raise HTTPException(status_code=404, detail="Run not found for this brand.")
+            return _review_not_found(
+                request,
+                title="Run not found",
+                message="That run does not exist or belongs to another brand.",
+            )
         st = json_blob_to_state(run.state_json)
         p = st.get("proposed_brand_template")
         if not p or not isinstance(p, dict):
-            raise HTTPException(status_code=404, detail="That run has no proposed_brand_template.")
+            return _review_not_found(
+                request,
+                title="Nothing to seed",
+                message="That run has no proposed_brand_template to load into the editor.",
+            )
         initial = p
         seed_label = f"proposed template from run {seed_run_id}"
     elif active_prof is not None:
@@ -300,6 +322,7 @@ async def review_brand_template_editor(
             seed_label = "baseline from brand.yaml (no active template file yet)"
     profile_json = json.dumps(initial, indent=2, ensure_ascii=False)
     warn = f"Active file on disk is invalid YAML/schema: {active_err}" if active_err else None
+    using_brand_yaml_baseline = seed_run_id is None and active_prof is None
     return templates.TemplateResponse(
         request,
         "review/brand_template_edit.html",
@@ -312,6 +335,7 @@ async def review_brand_template_editor(
             file_exists=path.is_file(),
             saved=(saved or "") == "1",
             error=warn,
+            using_brand_yaml_baseline=using_brand_yaml_baseline,
         ),
     )
 
@@ -376,14 +400,22 @@ async def review_brand_template_compare(
     _load_brand_pair_http(slug)
     run = await get_run(session, run_id)
     if run is None or run.brand_slug != slug:
-        raise HTTPException(status_code=404, detail="Run not found for this brand.")
+        return _review_not_found(
+            request,
+            title="Run not found",
+            message="That run does not exist or belongs to another brand.",
+        )
     st = json_blob_to_state(run.state_json)
     proposed = st.get("proposed_brand_template")
-    if not isinstance(proposed, dict):
-        proposed = None
+    if not isinstance(proposed, dict) or not proposed:
+        return _review_not_found(
+            request,
+            title="Nothing to compare",
+            message="This run has no proposed brand template on record.",
+        )
     active, _err = brand_template_storage.load_active_brand_template_optional(slug)
     saved_dump = active.model_dump(mode="json") if active is not None else None
-    rows = _template_compare_rows(saved_dump, proposed or {})
+    rows = _template_compare_rows(saved_dump, proposed)
     return templates.TemplateResponse(
         request,
         "review/brand_template_compare.html",

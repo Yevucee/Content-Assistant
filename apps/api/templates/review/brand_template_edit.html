@@ -12,6 +12,12 @@
   {% if error %}
   <div class="banner err">{{ error }}</div>
   {% endif %}
+  {% if using_brand_yaml_baseline %}
+  <p class="muted">
+    There is no <code>brand_template.yaml</code> on disk yet. The JSON below is the baseline from <code>brand.yaml</code>;
+    pipeline runs use that baseline for prompts until you save an active template file here.
+  </p>
+  {% endif %}
   <p><strong>Editor seed:</strong> {{ seed_label }}</p>
   <p class="muted">Edit JSON below (full <code>BrandTemplateProfile</code>). Saving replaces the file only when you confirm.</p>
   <form method="post" action="/review/brands/{{ slug }}/brand-template/save">
