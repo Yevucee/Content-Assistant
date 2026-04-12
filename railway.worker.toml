@@ -1,0 +1,10 @@
+# Railway config for the background worker service.
+# Worker does not serve HTTP — no healthcheckPath is set here.
+# Start command set in Railway dashboard: python -m apps.worker.main
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# No healthcheckPath — worker is a non-HTTP background process.
