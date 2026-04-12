@@ -38,6 +38,11 @@ app = FastAPI(title="Content Harness API", version="0.1.0", lifespan=lifespan)
 app.include_router(api_router)
 app.include_router(review_ui_router, prefix="/review", tags=["review"])
 
+
+@app.get("/ping")
+async def ping():
+    return {"ok": True, "route": "ping"}
+
 if STATIC_DIR.is_dir():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
