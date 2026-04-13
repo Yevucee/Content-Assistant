@@ -1,0 +1,114 @@
+{% extends "app/base_app.html" %}
+{% block content %}
+  <p class="muted"><a href="/app">← Dashboard</a></p>
+  <h1>{{ title }}</h1>
+  <p class="muted">All fields below depend on the <strong>Run type</strong> you choose. Only the matching section is used.</p>
+
+  {% if error %}
+  <div class="banner err">{{ error }}</div>
+  {% endif %}
+
+  {% if brands|length == 0 %}
+  <div class="banner warn">No brands available. Configure <code>brands/</code> first.</div>
+  {% else %}
+  <form method="post" action="/app/new" id="new-run-form">
+    <div class="section" style="border-top:none;padding-top:0;">
+      <h2>1. Brand &amp; output</h2>
+      <label>Brand
+        <select name="brand_slug" required>
+          {% for b in brands %}
+          <option value="{{ b }}" {% if form and form.brand_slug == b %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Run type
+        <select name="run_mode" id="run_mode" required>
+          {% for val, label in run_mode_choices %}
+          <option value="{{ val }}" {% if form and form.run_mode == val %}selected{% elif not form and val == 'idea_driven' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>What to produce
+        <select name="run_intent" required>
+          {% for val, label in run_intent_choices %}
+          <option value="{{ val }}" {% if form and form.run_intent == val %}selected{% elif not form and val == 'blog_plus_social' %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </div>
+
+    <div class="mode-panel" data-mode="idea_driven" hidden>
+      <h2>Idea details</h2>
+      <p class="muted">Give at least one of: working title, angle, rough idea, bullets, or notes.</p>
+      <label>Working title <input type="text" name="idea_working_title" autocomplete="off"></label>
+      <label>Angle / positioning <input type="text" name="idea_angle" autocomplete="off"></label>
+      <label>Rough idea <textarea name="idea_rough" rows="3"></textarea></label>
+      <label>Bullet points (one per line) <textarea name="idea_bullets" rows="4"></textarea></label>
+      <label>Extra notes <textarea name="idea_notes" rows="2"></textarea></label>
+    </div>
+
+    <div class="mode-panel" data-mode="document_driven" hidden>
+      <h2>Document</h2>
+      <label>Full text <span class="muted">(required)</span> <textarea name="doc_pasted_text" rows="14"></textarea></label>
+      <label>Title hint <input type="text" name="doc_title_hint"></label>
+      <label>Label (e.g. filename) <input type="text" name="doc_source_label"></label>
+    </div>
+
+    <div class="mode-panel" data-mode="transcript_driven" hidden>
+      <h2>Transcript or notes</h2>
+      <label>Full text <span class="muted">(required)</span> <textarea name="tr_pasted_text" rows="14"></textarea></label>
+      <label>Title hint <input type="text" name="tr_title_hint"></label>
+      <label>Context <span class="muted">(e.g. interview, meeting)</span> <input type="text" name="tr_context_notes"></label>
+    </div>
+
+    <div class="mode-panel" data-mode="mixed" hidden>
+      <h2>Mixed input</h2>
+      <p class="muted">Include at least one of: idea fields, document text, transcript text, instructions, or reference URLs.</p>
+      <h3 class="muted" style="font-size:0.95rem;">Idea (optional)</h3>
+      <label>Working title <input type="text" name="mix_idea_working_title"></label>
+      <label>Angle <input type="text" name="mix_idea_angle"></label>
+      <label>Rough idea <textarea name="mix_idea_rough" rows="2"></textarea></label>
+      <label>Bullets (one per line) <textarea name="mix_idea_bullets" rows="3"></textarea></label>
+      <label>Notes <textarea name="mix_idea_notes" rows="2"></textarea></label>
+      <h3 class="muted" style="font-size:0.95rem;">Document text (optional)</h3>
+      <label>Paste document <textarea name="mix_doc_text" rows="6"></textarea></label>
+      <label>Document title hint <input type="text" name="mix_doc_title"></label>
+      <h3 class="muted" style="font-size:0.95rem;">Transcript (optional)</h3>
+      <label>Paste transcript <textarea name="mix_tr_text" rows="6"></textarea></label>
+      <label>Transcript title hint <input type="text" name="mix_tr_title"></label>
+      <label>Transcript context <input type="text" name="mix_tr_context"></label>
+      <h3 class="muted" style="font-size:0.95rem;">Other</h3>
+      <label>Overall instructions <textarea name="mix_instructions" rows="3"></textarea></label>
+      <label>Reference URLs <span class="muted">(one per line)</span> <textarea name="mix_urls" rows="3"></textarea></label>
+    </div>
+
+    <div class="mode-panel" data-mode="website_discovery" hidden>
+      <h2>Website analysis</h2>
+      <label>Main website URL <span class="muted">(required)</span> <input type="url" name="web_website_url" placeholder="https://"></label>
+      <label>Brand or organisation name <input type="text" name="web_brand_name"></label>
+      <label>Blog or article URLs <span class="muted">(one per line, optional)</span> <textarea name="web_blog_urls" rows="4"></textarea></label>
+      <label>Focus / constraints <textarea name="web_extra_notes" rows="2"></textarea></label>
+      <label>Max same-site links to follow (0–8) <input type="text" name="web_max_links" value="3" style="max-width:6rem;"></label>
+    </div>
+
+    <div class="actions" style="margin-top:1.25rem;">
+      <button type="submit">Create run</button>
+    </div>
+  </form>
+
+  <script>
+(function () {
+  var sel = document.getElementById('run_mode');
+  if (!sel) return;
+  function sync() {
+    var v = sel.value;
+    document.querySelectorAll('.mode-panel').forEach(function (p) {
+      p.hidden = p.getAttribute('data-mode') !== v;
+    });
+  }
+  sel.addEventListener('change', sync);
+  sync();
+})();
+  </script>
+  {% endif %}
+{% endblock %}

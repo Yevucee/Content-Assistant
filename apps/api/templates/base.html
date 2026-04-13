@@ -21,7 +21,7 @@
       .actions form { display: inline-block; margin-right: 0.75rem; margin-bottom: 0.5rem; }
       .actions button { padding: 0.35rem 0.65rem; cursor: pointer; }
       .danger { border-color: #a44; color: #822; }
-      textarea, input[type="text"] { width: 100%; max-width: 36rem; font: inherit; padding: 0.35rem; box-sizing: border-box; }
+      textarea, input[type="text"], input[type="url"], select { width: 100%; max-width: 36rem; font: inherit; padding: 0.35rem; box-sizing: border-box; }
       label { display: block; margin-top: 0.35rem; font-size: 0.85rem; }
       ul.compact li { margin-bottom: 0.35rem; }
       .banner { padding: 0.65rem 0.85rem; margin: 0.75rem 0; border: 1px solid #999; background: #fafafa; font-size: 0.92rem; }
@@ -32,9 +32,12 @@
   </head>
   <body>
     <nav>
+      {% block nav %}
       <a href="/">Home</a>
+      <a href="/app">Dashboard</a>
       <a href="/review">Review queue</a>
       <a href="/docs">API docs</a>
+      {% endblock %}
     </nav>
     {% block content %}{% endblock %}
   </body>

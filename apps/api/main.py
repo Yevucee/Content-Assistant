@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 
 from apps.api.routes import api_router
+from apps.api.routes.app_ui import router as app_ui_router
 from apps.api.routes.review_ui import router as review_ui_router
 from harness.services.db import init_db
 from harness.utils.logging import configure_logging
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Content Harness API", version="0.1.0", lifespan=lifespan)
 app.include_router(api_router)
+app.include_router(app_ui_router, tags=["app"])
 app.include_router(review_ui_router, prefix="/review", tags=["review"])
 
 
@@ -53,9 +55,12 @@ templates = Jinja2Templates(directory=str(TEMPLATE_DIR))
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> HTMLResponse:
-    """Minimal landing page until review UI (Milestone 4)."""
+    """Product landing — main workflow lives under /app."""
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"title": "Content Harness", "app_base_url": os.environ.get("APP_BASE_URL", "")},
+        {
+            "title": "Content Harness",
+            "app_base_url": os.environ.get("APP_BASE_URL", ""),
+        },
     )
