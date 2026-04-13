@@ -151,7 +151,7 @@ async def app_new_run_form(request: Request) -> HTMLResponse:
     )
 
 
-@router.post("/app/new", response_class=HTMLResponse)
+@router.post("/app/new", response_class=HTMLResponse, response_model=None)
 async def app_new_run_submit(
     request: Request,
     session: AsyncSession = Depends(get_db),
