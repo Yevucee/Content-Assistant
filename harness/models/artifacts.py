@@ -5,6 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import Column, DateTime
 from sqlmodel import Field, SQLModel
 
 
@@ -18,7 +19,10 @@ class RunSourceItem(SQLModel, table=True):
     url: str = Field(index=True)
     source_id: str = ""
     source_name: str = ""
-    published_at: datetime | None = None
+    published_at: datetime | None = Field(
+        default=None,
+        sa_column=Column(DateTime(timezone=True), nullable=True),
+    )
     summary: str = ""
     extra_json: str = "{}"
 
@@ -35,4 +39,7 @@ class RunTopicCandidate(SQLModel, table=True):
     score: float = 0.0
     confidence: float = 0.0
     supporting_sources_json: str = "[]"
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), nullable=False),
+    )
