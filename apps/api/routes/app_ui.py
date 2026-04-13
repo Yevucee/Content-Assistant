@@ -7,6 +7,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+import markdown
+import nh3
 import structlog
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -37,6 +39,8 @@ RUN_MODE_CHOICES: tuple[tuple[str, str], ...] = (
     (RunMode.MIXED.value, "Mixed — combine idea, text, links, and instructions"),
     (RunMode.WEBSITE_DISCOVERY.value, "Website — analyze a site or blog for style and opportunities"),
 )
+
+_BRAND_NOT_FOUND_USER_MSG = "Brand not found. Please choose a valid brand."
 
 RUN_INTENT_CHOICES: tuple[tuple[str, str], ...] = (
     (RunIntent.BLOG_PLUS_SOCIAL.value, "Blog article + social posts (default)"),
@@ -87,6 +91,36 @@ def _friendly_persist_error(exc: BaseException) -> str:
         "We could not save your run. Your entries are preserved below — fix any issues and try again, "
         "or contact support if it keeps failing."
     )
+
+
+def _app_article_title_and_body(body_md: str, title: str) -> tuple[bool, str]:
+    """
+    If the markdown opens with an H1 matching ``title``, drop that line so we do not
+    duplicate the heading when ``article.title`` is also shown (or when it becomes the only H1).
+    """
+    show_title = bool((title or "").strip())
+    if not body_md or not show_title:
+        return show_title, body_md
+    stripped = body_md.lstrip()
+    if not stripped.startswith("#"):
+        return show_title, body_md
+    first_line, sep, rest = stripped.partition("\n")
+    h1_text = first_line.lstrip("#").strip()
+    if h1_text.casefold() == title.strip().casefold():
+        return False, (rest.lstrip("\n") if sep else "").lstrip()
+    return show_title, body_md
+
+
+def _render_safe_article_html(body_md: str, *, max_chars: int = 8000) -> tuple[str, bool]:
+    """Markdown → HTML, truncated then sanitized with nh3."""
+    truncated = len(body_md) > max_chars
+    text = body_md[:max_chars] if truncated else body_md
+    raw = markdown.markdown(
+        text,
+        extensions=["extra", "nl2br", "sane_lists"],
+        output_format="html",
+    )
+    return nh3.clean(raw), truncated
 
 
 def _build_mixed_from_form(
@@ -284,10 +318,10 @@ async def app_new_run_submit(
 
     try:
         brand_loader.load_brand_pair(brand_slug)
-    except ValueError as e:
-        return _rerender(str(e))
-    except FileNotFoundError as e:
-        return _rerender(str(e), status=404)
+    except ValueError:
+        return _rerender(_BRAND_NOT_FOUND_USER_MSG, status=400)
+    except FileNotFoundError:
+        return _rerender(_BRAND_NOT_FOUND_USER_MSG, status=404)
 
     idea_payload: dict[str, Any] | None = None
     document_input: dict[str, Any] | None = None
@@ -373,8 +407,8 @@ async def app_new_run_submit(
         )
     except ValueError as e:
         return _rerender(str(e))
-    except FileNotFoundError as e:
-        return _rerender(str(e), status=404)
+    except FileNotFoundError:
+        return _rerender(_BRAND_NOT_FOUND_USER_MSG, status=404)
     except Exception as e:
         log.exception("app.new_run.failed", brand_slug=brand_slug, run_mode=rm.value)
         return _rerender(_friendly_persist_error(e), status=500)
@@ -407,6 +441,15 @@ async def app_run_result(
     linkedin = state.get("linkedin_post") if isinstance(state.get("linkedin_post"), dict) else None
     errors = state.get("errors") if isinstance(state.get("errors"), list) else []
     channel = state.get("channel_output_bundle") if isinstance(state.get("channel_output_bundle"), dict) else None
+    article_show_title = False
+    article_body_html = ""
+    article_truncated = False
+    if article:
+        body = article.get("body_md") or ""
+        art_title = (article.get("title") or "").strip()
+        article_show_title, body_for_md = _app_article_title_and_body(body, art_title)
+        if (body_for_md or "").strip():
+            article_body_html, article_truncated = _render_safe_article_html(body_for_md)
     return templates.TemplateResponse(
         request,
         "app/run_result.html",
@@ -418,6 +461,9 @@ async def app_run_result(
             topic=topic,
             brief=brief,
             article=article,
+            article_show_title=article_show_title,
+            article_body_html=article_body_html,
+            article_truncated=article_truncated,
             linkedin=linkedin,
             channel=channel,
             errors=errors,
