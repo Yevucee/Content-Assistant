@@ -93,22 +93,44 @@
     </div>
 
     <div class="actions" style="margin-top:1.25rem;">
-      <button type="submit">Create run</button>
+      <p id="new-run-generating-msg" class="muted" hidden style="margin:0 0 0.5rem 0;">Generating content — this usually takes 1–2 minutes…</p>
+      <button type="submit" id="new-run-submit">Create run</button>
     </div>
   </form>
 
   <script>
 (function () {
   var sel = document.getElementById('run_mode');
-  if (!sel) return;
-  function sync() {
+  var form = document.getElementById('new-run-form');
+
+  function syncModePanels() {
+    if (!sel) return;
     var v = sel.value;
     document.querySelectorAll('.mode-panel').forEach(function (p) {
-      p.hidden = p.getAttribute('data-mode') !== v;
+      var on = p.getAttribute('data-mode') === v;
+      p.hidden = !on;
+      p.querySelectorAll('input, textarea, select').forEach(function (el) {
+        el.disabled = !on;
+      });
     });
   }
-  sel.addEventListener('change', sync);
-  sync();
+
+  if (sel) {
+    sel.addEventListener('change', syncModePanels);
+    syncModePanels();
+  }
+
+  if (form) {
+    var submitBtn = document.getElementById('new-run-submit');
+    var genMsg = document.getElementById('new-run-generating-msg');
+    form.addEventListener('submit', function () {
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Generating…';
+      }
+      if (genMsg) genMsg.hidden = false;
+    });
+  }
 })();
   </script>
   {% endif %}
