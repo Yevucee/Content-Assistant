@@ -137,6 +137,83 @@ async def _repair_postgres_timestamp_columns(async_conn, *, app_tables: tuple[st
         log.info("db.postgres_ts_repair.complete", altered_count=len(altered), altered=altered)
 
 
+async def _repair_postgres_missing_columns(async_conn) -> None:
+    """
+    Postgres only: ``create_all`` does not add new columns to existing tables.
+
+    - Explicit: ``run_generated_content.channel_outputs_json`` (legacy Railway DBs).
+    - Generic: any other **nullable** column present in SQLModel metadata but absent
+      from ``information_schema`` (conservative; NOT NULL additions need explicit DDL).
+    """
+    from sqlalchemy.dialects import postgresql
+
+    log.info("db.postgres_missing_columns.start")
+
+    await async_conn.execute(
+        text(
+            """
+            ALTER TABLE run_generated_content
+            ADD COLUMN IF NOT EXISTS channel_outputs_json TEXT NOT NULL DEFAULT '{}'
+            """
+        )
+    )
+    log.info(
+        "db.postgres_missing_columns.explicit",
+        table="run_generated_content",
+        column="channel_outputs_json",
+    )
+
+    dialect = postgresql.dialect()
+    for table_name in sorted(SQLModel.metadata.tables.keys()):
+        table = SQLModel.metadata.tables[table_name]
+        r = await async_conn.execute(
+            text(
+                """
+                SELECT column_name FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = :t
+                """
+            ),
+            {"t": table_name},
+        )
+        existing = {row[0] for row in r.fetchall()}
+        for col in table.columns:
+            if col.name in existing:
+                continue
+            if table_name == "run_generated_content" and col.name == "channel_outputs_json":
+                continue
+            if not col.nullable:
+                log.warning(
+                    "db.postgres_missing_columns.skip_not_null",
+                    table=table_name,
+                    column=col.name,
+                    message="Add an explicit IF NOT EXISTS repair if legacy DBs need this column",
+                )
+                continue
+            type_sql = col.type.compile(dialect=dialect)
+            stmt = (
+                f'ALTER TABLE "{table_name}" ADD COLUMN IF NOT EXISTS '
+                f'"{col.name}" {type_sql} NULL'
+            )
+            try:
+                await async_conn.execute(text(stmt))
+                log.info(
+                    "db.postgres_missing_columns.added_nullable",
+                    table=table_name,
+                    column=col.name,
+                    type_sql=type_sql,
+                )
+            except Exception:
+                log.exception(
+                    "db.postgres_missing_columns.add_failed",
+                    table=table_name,
+                    column=col.name,
+                    statement=stmt,
+                )
+                raise
+
+    log.info("db.postgres_missing_columns.complete")
+
+
 async def init_db() -> None:
     """Create tables if missing (v1; replace with Alembic later)."""
     from harness.models.artifacts import RunSourceItem, RunTopicCandidate  # noqa: F401
@@ -152,6 +229,7 @@ async def init_db() -> None:
         app_tables = tuple(sorted(SQLModel.metadata.tables.keys()))
         async with engine.begin() as conn:
             await _repair_postgres_timestamp_columns(conn, app_tables=app_tables)
+            await _repair_postgres_missing_columns(conn)
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:

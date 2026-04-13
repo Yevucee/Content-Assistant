@@ -60,6 +60,35 @@ def _split_lines(s: str) -> list[str]:
     return [line.strip() for line in (s or "").splitlines() if line.strip()]
 
 
+def _friendly_persist_error(exc: BaseException) -> str:
+    """User-visible message for run save failures (avoid raw tracebacks)."""
+    seen: set[int] = set()
+    chain: list[BaseException] = []
+    e: BaseException | None = exc
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        chain.append(e)
+        e = e.__cause__ or e.__context__
+
+    for err in chain:
+        name = type(err).__name__
+        if "UndefinedColumn" in name:
+            return (
+                "The database is missing a column this version of the app needs. "
+                "Redeploy the latest API; if that does not fix it, contact support."
+            )
+        msg = str(err).lower()
+        if "does not exist" in msg and "column" in msg:
+            return (
+                "The database schema does not match this version of the app. "
+                "Redeploy the latest API or contact support."
+            )
+    return (
+        "We could not save your run. Your entries are preserved below — fix any issues and try again, "
+        "or contact support if it keeps failing."
+    )
+
+
 def _build_mixed_from_form(
     *,
     idea_working_title: str,
@@ -193,10 +222,38 @@ async def app_new_run_submit(
     web_max_links: str = Form("3"),
 ) -> HTMLResponse | RedirectResponse:
     brands = brand_loader.list_brand_slugs()
-    form_snapshot = {
+    form_snapshot: dict[str, Any] = {
         "brand_slug": brand_slug,
         "run_mode": run_mode,
         "run_intent": run_intent,
+        "idea_working_title": idea_working_title,
+        "idea_angle": idea_angle,
+        "idea_rough": idea_rough,
+        "idea_notes": idea_notes,
+        "idea_bullets": idea_bullets,
+        "doc_pasted_text": doc_pasted_text,
+        "doc_title_hint": doc_title_hint,
+        "doc_source_label": doc_source_label,
+        "tr_pasted_text": tr_pasted_text,
+        "tr_title_hint": tr_title_hint,
+        "tr_context_notes": tr_context_notes,
+        "mix_idea_working_title": mix_idea_working_title,
+        "mix_idea_angle": mix_idea_angle,
+        "mix_idea_rough": mix_idea_rough,
+        "mix_idea_notes": mix_idea_notes,
+        "mix_idea_bullets": mix_idea_bullets,
+        "mix_doc_text": mix_doc_text,
+        "mix_doc_title": mix_doc_title,
+        "mix_tr_text": mix_tr_text,
+        "mix_tr_title": mix_tr_title,
+        "mix_tr_context": mix_tr_context,
+        "mix_instructions": mix_instructions,
+        "mix_urls": mix_urls,
+        "web_website_url": web_website_url,
+        "web_brand_name": web_brand_name,
+        "web_blog_urls": web_blog_urls,
+        "web_extra_notes": web_extra_notes,
+        "web_max_links": web_max_links,
     }
 
     def _rerender(error: str, status: int = 400) -> HTMLResponse:
@@ -318,12 +375,9 @@ async def app_new_run_submit(
         return _rerender(str(e))
     except FileNotFoundError as e:
         return _rerender(str(e), status=404)
-    except Exception:
+    except Exception as e:
         log.exception("app.new_run.failed", brand_slug=brand_slug, run_mode=rm.value)
-        return _rerender(
-            "Something went wrong while creating the run. Please try again or contact support.",
-            status=500,
-        )
+        return _rerender(_friendly_persist_error(e), status=500)
 
     return RedirectResponse(url=f"/app/runs/{run.id}", status_code=303)
 
