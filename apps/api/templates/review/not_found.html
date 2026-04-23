@@ -1,6 +1,6 @@
-{% extends "base.html" %}
+{% extends "review/base_review.html" %}
 {% block content %}
   <h1>{{ title }}</h1>
   <p>{{ message | safe }}</p>
-  <p class="muted"><a href="/review">← Review queue</a></p>
+  <p class="muted back-link"><a href="/review">← Review queue</a></p>
 {% endblock %}

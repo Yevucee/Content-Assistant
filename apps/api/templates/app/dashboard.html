@@ -2,7 +2,7 @@
 {% block content %}
   <h1>{{ title }}</h1>
   <p class="muted">Create content packs for your brands. For approvals and WordPress export, use <a href="/review">Review</a>.</p>
-  <p><a href="/app/new"><strong>Start a new run</strong></a></p>
+  <p class="actions"><a class="btn btn--primary" href="/app/new">Start a new run</a></p>
 
   {% if brands|length == 0 %}
   <div class="banner warn">No brands are configured. Add <code>brands/&lt;slug&gt;/brand.yaml</code> in the deployment.</div>
@@ -13,21 +13,38 @@
     {% if runs|length == 0 %}
     <p class="muted">No runs yet. <a href="/app/new">Create your first run</a>.</p>
     {% else %}
-    <table>
-      <thead>
-        <tr><th>When (UTC)</th><th>Brand</th><th>Status</th><th></th></tr>
-      </thead>
-      <tbody>
-        {% for r in runs %}
-        <tr>
-          <td class="muted">{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-          <td>{{ r.brand_slug }}</td>
-          <td><span class="badge">{{ r.status }}</span></td>
-          <td><a href="/app/runs/{{ r.id }}">View</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="data-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr><th>When (UTC)</th><th>Brand</th><th>Status</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for r in runs %}
+          <tr>
+            <td class="muted">{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+            <td>{{ r.brand_slug }}</td>
+            <td>
+              <span class="badge status-badge status-badge--{{ r.status|replace('_', '-') }}">{{ r.status }}</span>
+            </td>
+            <td><a href="/app/runs/{{ r.id }}">View</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="data-cards" role="list">
+      {% for r in runs %}
+      <a class="run-card" href="/app/runs/{{ r.id }}" role="listitem">
+        <div class="run-card__top">
+          <div>
+            <span class="badge status-badge status-badge--{{ r.status|replace('_', '-') }}">{{ r.status }}</span>
+            <p class="run-card__meta"><strong>{{ r.brand_slug }}</strong> · {{ r.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>
+          </div>
+          <span class="run-card__chev" aria-hidden="true">→</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
     {% endif %}
   </div>
 {% endblock %}

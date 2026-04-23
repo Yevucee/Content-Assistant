@@ -1,0 +1,22 @@
+{% set p = request.url.path.rstrip("/") or "/" %}
+<nav class="app-tabbar" role="navigation" aria-label="Primary" id="app-tabbar">
+  <a href="/app" class="app-tabbar__item{% if p == '/app' or (p.startswith('/app/runs') and not p.startswith('/app/new')) %} is-active{% endif %}">
+    <svg class="app-tabbar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+    <span>Dashboard</span>
+  </a>
+  <a href="/app/new" class="app-tabbar__item{% if p.startswith('/app/new') %} is-active{% endif %}">
+    <svg class="app-tabbar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+    </svg>
+    <span>New</span>
+  </a>
+  <a href="/review" class="app-tabbar__item{% if p.startswith('/review') %} is-active{% endif %}">
+    <svg class="app-tabbar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M4 4h16v2H4V4zM4 8h10v2H4V8zM4 12h14v2H4v-2zM4 16h8v2H4v-2z"/>
+    </svg>
+    <span>Review</span>
+  </a>
+</nav>

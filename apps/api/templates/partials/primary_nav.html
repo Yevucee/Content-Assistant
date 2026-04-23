@@ -1,0 +1,8 @@
+{% set p = request.url.path.rstrip('/') or "/" %}
+<nav class="app-nav--desktop" aria-label="Main">
+  <a href="/" class="{% if p == "" or p == "/" %}is-active{% endif %}">Home</a>
+  <a href="/app" class="{% if p == "/app" or (p.startswith("/app/runs") and not p.startswith("/app/new")) %}is-active{% endif %}">Dashboard</a>
+  <a href="/app/new" class="{% if p.startswith("/app/new") %}is-active{% endif %}">New run</a>
+  <a href="/review" class="{% if p.startswith("/review") %}is-active{% endif %}">Review</a>
+  <a href="/docs" class="{% if p.startswith("/docs") %}is-active{% endif %}">API</a>
+</nav>

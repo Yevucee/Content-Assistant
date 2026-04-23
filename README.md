@@ -112,3 +112,7 @@ Edit **`brands/<slug>/brand.yaml`** and **`sources.yaml`**. Example slugs: `inve
 
 - [docs/implementation_plan.md](docs/implementation_plan.md) — milestones and architecture notes
 - [docs/railway.md](docs/railway.md) — Railway deployment (API + worker + Postgres)
+- [docs/android_railway_checklist.md](docs/android_railway_checklist.md) — phone + hosted API (`APP_BASE_URL`, LLM)
+- [docs/webview_apk.md](docs/webview_apk.md) — optional personal WebView shell (Android)
+
+The web UI includes a **PWA manifest** (`/static/manifest.json`) so you can add the app to your home screen on supported browsers.

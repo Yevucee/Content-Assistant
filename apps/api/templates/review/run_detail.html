@@ -1,11 +1,12 @@
-{% extends "base.html" %}
+{% extends "review/base_review.html" %}
 {% block content %}
   {% set st = pkg['selected_topic'] %}
-  <p class="muted"><a href="/review">← Review queue</a></p>
+  <p class="muted back-link"><a href="/review">← Review queue</a></p>
   <h1>Run <code>{{ run.id }}</code></h1>
   <p>
     <strong>Brand:</strong> {{ run.brand_slug }}
-    &nbsp;|&nbsp; <strong>Status:</strong> <span class="badge">{{ run.status }}</span>
+    &nbsp;|&nbsp; <strong>Status:</strong>
+    <span class="badge status-badge status-badge--{{ run.status|replace('_', '-') }}">{{ run.status }}</span>
     &nbsp;|&nbsp; <strong>Stage:</strong> <span class="muted">{{ run.stage }}</span>
   </p>
   <p class="muted">Created {{ run.created_at.strftime('%Y-%m-%d %H:%M') }} UTC · Updated {{ run.updated_at.strftime('%Y-%m-%d %H:%M') }} UTC</p>

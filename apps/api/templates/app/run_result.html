@@ -1,21 +1,9 @@
 {% extends "app/base_app.html" %}
 {% block content %}
-  <style>
-    .article-body { line-height: 1.55; max-width: 40rem; }
-    .article-body h1 { font-size: 1.35rem; margin: 1rem 0 0.5rem; font-weight: 600; }
-    .article-body h2 { font-size: 1.15rem; margin: 1rem 0 0.45rem; font-weight: 600; }
-    .article-body h3 { font-size: 1.05rem; margin: 0.85rem 0 0.35rem; font-weight: 600; }
-    .article-body p { margin: 0.5rem 0; }
-    .article-body ul, .article-body ol { margin: 0.5rem 0 0.5rem 1.25rem; padding: 0; }
-    .article-body li { margin: 0.25rem 0; }
-    .article-body blockquote { margin: 0.75rem 0; padding-left: 1rem; border-left: 3px solid #ccc; color: #444; }
-    .article-body pre, .article-body code { font-size: 0.9rem; }
-    .article-body pre { background: #f8f8f8; padding: 0.65rem; overflow-x: auto; }
-  </style>
-  <p class="muted"><a href="/app">← Dashboard</a></p>
+  <p class="muted back-link"><a href="/app">← Dashboard</a></p>
   <h1>Your run</h1>
   <p>
-    <span class="badge">{{ run.status }}</span>
+    <span class="badge status-badge status-badge--{{ run.status|replace('_', '-') }}">{{ run.status }}</span>
     &nbsp;·&nbsp; <strong>{{ run.brand_slug }}</strong>
     &nbsp;·&nbsp; <span class="muted">{{ run.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</span>
   </p>
@@ -80,7 +68,7 @@
   {% if linkedin and linkedin.get('text') %}
   <div class="section">
     <h2>LinkedIn</h2>
-    <p style="white-space:pre-wrap;">{{ linkedin.text }}</p>
+    <p class="pre-wrap">{{ linkedin.text }}</p>
   </div>
   {% endif %}
 
@@ -90,12 +78,12 @@
     {% set fb = channel.get('facebook') %}
     {% if fb and fb.get('primary') %}
     <p><strong>Facebook</strong></p>
-    <p style="white-space:pre-wrap;">{{ fb.primary[:2000] }}{% if fb.primary|length > 2000 %}…{% endif %}</p>
+    <p class="pre-wrap">{{ fb.primary[:2000] }}{% if fb.primary|length > 2000 %}…{% endif %}</p>
     {% endif %}
     {% set ig = channel.get('instagram') %}
     {% if ig and ig.get('primary') %}
     <p><strong>Instagram</strong></p>
-    <p style="white-space:pre-wrap;">{{ ig.primary[:2000] }}{% if ig.primary|length > 2000 %}…{% endif %}</p>
+    <p class="pre-wrap">{{ ig.primary[:2000] }}{% if ig.primary|length > 2000 %}…{% endif %}</p>
     {% endif %}
   </div>
   {% endif %}
