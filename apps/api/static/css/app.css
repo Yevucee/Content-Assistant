@@ -257,6 +257,22 @@ body.app-tabbar-active .app-main {
   margin-bottom: 0.5rem;
 }
 
+.lang-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
+  align-items: center;
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+}
+.lang-switcher__link {
+  color: var(--text-muted);
+}
+.lang-switcher__current {
+  color: var(--text);
+  font-weight: 600;
+}
+
 /* Page titles */
 h1 {
   font-size: 1.4rem;
