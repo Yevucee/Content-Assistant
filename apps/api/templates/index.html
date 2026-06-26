@@ -1,19 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
+  {% if languages %}
+  <nav class="lang-switcher" aria-label="{{ t.language_label }}">
+    {% for code, name in languages %}
+      {% if code == lang %}
+        <span class="lang-switcher__current" aria-current="true">{{ name }}</span>
+      {% else %}
+        <a class="lang-switcher__link" href="?lang={{ code }}" hreflang="{{ code }}">{{ name }}</a>
+      {% endif %}
+    {% endfor %}
+  </nav>
+  {% endif %}
   <h1>{{ title }}</h1>
-  <p class="home-lead">Plan and draft multi-channel content for your brands, with human review before anything ships.</p>
+  <p class="home-lead">{{ t.index_lead }}</p>
   <div class="home-actions">
-    <a class="btn btn--primary" href="/app">Go to dashboard</a>
-    <a class="btn" href="/app/new">Create a new run</a>
+    <a class="btn btn--primary" href="/app">{{ t.index_go_dashboard }}</a>
+    <a class="btn" href="/app/new">{{ t.index_create_run }}</a>
   </div>
   <div class="section">
-    <h2>Also available</h2>
+    <h2>{{ t.index_also_available }}</h2>
     <ul class="compact">
-      <li><a href="/review">Review queue</a> — approve runs, export WordPress drafts</li>
-      <li><a href="/docs">API documentation</a> — integrations and automation</li>
+      <li><a href="/review">{{ t.index_review_queue }}</a> — {{ t.index_review_queue_desc }}</li>
+      <li><a href="/docs">{{ t.index_api_docs }}</a> — {{ t.index_api_docs_desc }}</li>
     </ul>
   </div>
   {% if app_base_url %}
-  <p class="muted">Public URL: <code>{{ app_base_url }}</code></p>
+  <p class="muted">{{ t.index_public_url }} <code>{{ app_base_url }}</code></p>
   {% endif %}
 {% endblock %}
